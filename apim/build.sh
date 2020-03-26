@@ -17,7 +17,7 @@ declare ARCH="noarch"
 declare DESC="Gravitee.io API Management"
 declare MAINTAINER="David BRASSELY <david.brassely@graviteesource.com>"
 declare DOCKER_WDIR="/tmp/fpm"
-declare DOCKER_FPM="fpm"
+declare DOCKER_FPM="graviteeio/fpm"
 
 clean() {
 	rm -rf build/skel/*
