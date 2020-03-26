@@ -1,0 +1,6 @@
+#!/bin/sh
+
+rm -fr /opt/graviteeio/apim/graviteeio-management-api-%{version}/data 
+rm -fr /opt/graviteeio/apim/graviteeio-management-api-%{version}/logs
+rm -fr /opt/graviteeio/apim/graviteeio-management-api-%{version}/plugins/.work
+

@@ -1,0 +1,24 @@
+[Unit]
+Description=Gravitee.io API Management - API Gateway
+Documentation=http://docs.gravitee.io
+After=network.target
+
+[Service]
+Type=simple
+User=gravitee
+LimitNOFILE=65536
+ExecStart=/opt/graviteeio/apim/gateway/bin/gravitee
+ExecReload=/bin/kill -s HUP $MAINPID
+# Having non-zero Limit*s causes performance problems due to accounting overhead
+# in the kernel. We recommend using cgroups to do container-local accounting.
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+# Uncomment TasksMax if your systemd version supports it.
+# Only systemd 226 and above support this version.
+#TasksMax=infinity
+TimeoutStartSec=0
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

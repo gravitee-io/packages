@@ -1,0 +1,18 @@
+[Unit]
+Description=Gravitee.io API Management - Management API
+Documentation=http://docs.gravitee.io
+After=network.target
+
+[Service]
+Type=simple
+User=gravitee
+ExecStart=/opt/graviteeio/apim/management-api/bin/gravitee
+ExecReload=/bin/kill -s HUP $MAINPID
+# Uncomment TasksMax if your systemd version supports it.
+# Only systemd 226 and above support this version.
+#TasksMax=infinity
+TimeoutStartSec=0
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

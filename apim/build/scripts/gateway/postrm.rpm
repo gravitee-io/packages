@@ -1,0 +1,15 @@
+#!/bin/sh
+
+USERNAME=gravitee
+
+in_use=$(rpm -qa | grep gravitee | wc -l)
+
+if [[ $in_use -gt 1 ]]; then
+  echo "${USERNAME} still in use by an other process, skipping..."
+fi
+
+if [[ "$1" = "0" && $in_use -eq 1 ]]; then
+  getent passwd $USERNAME && userdel $USERNAME > /dev/null
+fi
+
+exit 0

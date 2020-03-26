@@ -1,0 +1,5 @@
+#!/bin/sh
+
+rm -fr /opt/graviteeio/am/graviteeio-am-gateway-%{version}/logs
+rm -fr /opt/graviteeio/am/graviteeio-am-gateway-%{version}/plugins/.work
+

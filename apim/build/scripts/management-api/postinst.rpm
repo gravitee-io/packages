@@ -1,0 +1,4 @@
+#!/bin/sh
+
+ln -sf /opt/graviteeio/apim/graviteeio-management-api-%{version}/ /opt/graviteeio/apim/management-api
+chown -R gravitee:gravitee /opt/graviteeio/apim/management-api
