@@ -47,7 +47,7 @@ build_api_gateway() {
 	mkdir -p build/skel/el7/etc/systemd/system/
 	cp build/files/graviteeio-apim-gateway.service build/skel/el7/etc/systemd/system/
 
-	sudo docker run --rm -it -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
+	docker run --rm -it -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
 		--rpm-user ${USER} \
           	--rpm-group ${USER} \
           	--rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
@@ -81,7 +81,7 @@ build_management_api() {
 	mkdir -p build/skel/el7/etc/systemd/system/
 	cp build/files/graviteeio-apim-management-api.service build/skel/el7/etc/systemd/system/
 
-	sudo docker run --rm -it -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
+	docker run --rm -it -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
                 --rpm-user ${USER} \
                 --rpm-group ${USER} \
                 --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
@@ -115,7 +115,7 @@ build_management_ui() {
 	mkdir -p build/skel/el7/etc/nginx/default.d/
 	cp build/files/graviteeio-management-ui.conf build/skel/el7/etc/nginx/default.d/
 
-	sudo docker run --rm -it -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
+	docker run --rm -it -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
                 --rpm-user ${USER} \
                 --rpm-group ${USER} \
                 --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
