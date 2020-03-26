@@ -141,7 +141,7 @@ build_management_ui() {
 
 build() {
 	clean
-	#download
+	download
 	build_api_gateway
 	build_management_api
 	build_management_ui
