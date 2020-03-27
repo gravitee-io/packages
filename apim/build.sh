@@ -18,6 +18,8 @@ declare DESC="Gravitee.io API Management"
 declare MAINTAINER="David BRASSELY <david.brassely@graviteesource.com>"
 declare DOCKER_WDIR="/tmp/fpm"
 declare DOCKER_FPM="graviteeio/fpm"
+declare EL_VERSION=""
+declare TEMPLATE_DIR="";
 
 clean() {
 	rm -rf build/skel/*
@@ -40,12 +42,12 @@ download() {
 build_api_gateway() {
 	rm -fr build/skel/
 
-	mkdir -p build/skel/el7/opt/graviteeio/apim
-	cp -fr .staging/graviteeio-full-${VERSION}/graviteeio-gateway-${VERSION} build/skel/el7/opt/graviteeio/apim
-	ln -sf build/skel/el7/opt/graviteeio/apim/graviteeio-gateway-${VERSION} build/skel/el7/opt/graviteeio/apim/gateway
+	mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
+	cp -fr .staging/graviteeio-full-${VERSION}/graviteeio-gateway-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim
+	ln -sf build/skel/el7/opt/graviteeio/apim/graviteeio-gateway-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim/gateway
 
-	mkdir -p build/skel/el7/etc/systemd/system/
-	cp build/files/graviteeio-apim-gateway.service build/skel/el7/etc/systemd/system/
+	mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
+	cp build/files/graviteeio-apim-gateway.service ${TEMPLATE_DIR}/etc/systemd/system/
 
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
 		--rpm-user ${USER} \
@@ -56,8 +58,8 @@ build_api_gateway() {
         	--after-install build/scripts/gateway/postinst.rpm \
         	--before-remove build/scripts/gateway/prerm.rpm \
         	--after-remove build/scripts/gateway/postrm.rpm \
-                --iteration ${RELEASE}.el7 \
-                -C build/skel/el7 \
+                --iteration ${RELEASE}.el${EL_VERSION} \
+                -C ${TEMPLATE_DIR} \
 		-s dir -v ${VERSION}  \
   		--license "${LICENSE}" \
   		--vendor "${VENDOR}" \
@@ -66,7 +68,7 @@ build_api_gateway() {
   		--url "${URL}" \
   		--description  "${DESC}: API Gateway" \
   		--depends java-1.8.0-openjdk \
-  		--config-files build/skel/el7/opt/graviteeio/apim/graviteeio-gateway-${VERSION}/config \
+  		--config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-gateway-${VERSION}/config \
   		--verbose \
 		-n ${PKGNAME}-gateway
 }
@@ -74,12 +76,12 @@ build_api_gateway() {
 build_management_api() {
 	rm -fr build/skel/
 	
-	mkdir -p build/skel/el7/opt/graviteeio/apim
-        cp -fr .staging/graviteeio-full-${VERSION}/graviteeio-management-api-${VERSION} build/skel/el7/opt/graviteeio/apim
-	ln -sf build/skel/el7/opt/graviteeio/apim/graviteeio-management-api-${VERSION} build/skel/el7/opt/graviteeio/apim/management-api
+	mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
+        cp -fr .staging/graviteeio-full-${VERSION}/graviteeio-management-api-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim
+	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-management-api-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim/management-api
 
-	mkdir -p build/skel/el7/etc/systemd/system/
-	cp build/files/graviteeio-apim-management-api.service build/skel/el7/etc/systemd/system/
+	mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
+	cp build/files/graviteeio-apim-management-api.service ${TEMPLATE_DIR}/etc/systemd/system/
 
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
                 --rpm-user ${USER} \
@@ -90,8 +92,8 @@ build_management_api() {
                 --after-install build/scripts/management-api/postinst.rpm \
                 --before-remove build/scripts/management-api/prerm.rpm \
                 --after-remove build/scripts/management-api/postrm.rpm \
-                --iteration ${RELEASE}.el7 \
-                -C build/skel/el7 \
+                --iteration ${RELEASE}.el${EL_VERSION} \
+                -C ${TEMPLATE_DIR} \
                 -s dir -v ${VERSION}  \
                 --license "${LICENSE}" \
                 --vendor "${VENDOR}" \
@@ -100,7 +102,7 @@ build_management_api() {
                 --url "${URL}" \
                 --description  "${DESC}: Management API" \
                 --depends java-1.8.0-openjdk \
-                --config-files build/skel/el7/opt/graviteeio/apim/graviteeio-management-api-${VERSION}/config \
+                --config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-management-api-${VERSION}/config \
                 --verbose \
                 -n ${PKGNAME}-management-api
 }
@@ -108,12 +110,12 @@ build_management_api() {
 build_management_ui() {
 	rm -fr build/skel/
 
-	mkdir -p build/skel/el7/opt/graviteeio/apim
-        cp -fr .staging/graviteeio-full-${VERSION}/graviteeio-management-ui-${VERSION} build/skel/el7/opt/graviteeio/apim
-	ln -sf build/skel/el7/opt/graviteeio/apim/graviteeio-management-ui-${VERSION} build/skel/el7/opt/graviteeio/apim/management-ui
+	mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
+        cp -fr .staging/graviteeio-full-${VERSION}/graviteeio-management-ui-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim
+	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-management-ui-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim/management-ui
 
-	mkdir -p build/skel/el7/etc/nginx/default.d/
-	cp build/files/graviteeio-management-ui.conf build/skel/el7/etc/nginx/default.d/
+	mkdir -p ${TEMPLATE_DIR}/etc/nginx/default.d/
+	cp build/files/graviteeio-management-ui.conf ${TEMPLATE_DIR}/etc/nginx/default.d/
 
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
                 --rpm-user ${USER} \
@@ -124,8 +126,8 @@ build_management_ui() {
                 --after-install build/scripts/management-ui/postinst.rpm \
                 --before-remove build/scripts/management-ui/prerm.rpm \
                 --after-remove build/scripts/management-ui/postrm.rpm \
-                --iteration ${RELEASE}.el7 \
-                -C build/skel/el7 \
+                --iteration ${RELEASE}.el${EL_VERSION} \
+                -C ${TEMPLATE_DIR} \
                 -s dir -v ${VERSION}  \
                 --license "${LICENSE}" \
                 --vendor "${VENDOR}" \
@@ -134,7 +136,7 @@ build_management_ui() {
                 --url "${URL}" \
                 --description  "${DESC}: Management UI" \
                 --depends nginx \
-		--config-files build/skel/el7/opt/graviteeio/apim/graviteeio-management-ui-${VERSION}/constants.json \
+		--config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-management-ui-${VERSION}/constants.json \
                 --verbose \
                 -n ${PKGNAME}-management-ui
 }
@@ -142,14 +144,14 @@ build_management_ui() {
 build_full() {
 	# Dirty hack to avoid issues with FPM
 	rm -fr build/skel/
-        mkdir -p build/skel/el7
+        mkdir -p ${TEMPLATE_DIR}
 
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
                 --rpm-user ${USER} \
                 --rpm-group ${USER} \
                 --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
-                --iteration ${RELEASE}.el7 \
-		-C build/skel/el7 \
+                --iteration ${RELEASE}.el${EL_VERSION} \
+		-C ${TEMPLATE_DIR} \
                 -s dir -v ${VERSION}  \
                 --license "${LICENSE}" \
                 --vendor "${VENDOR}" \
@@ -167,14 +169,14 @@ build_full() {
 build_full_with_dependencies() {
 	# Dirty hack to avoid issues with FPM
         rm -fr build/skel/
-        mkdir -p build/skel/el7
+        mkdir -p ${TEMPLATE_DIR}
 
         docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
                 --rpm-user ${USER} \
                 --rpm-group ${USER} \
                 --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
-                --iteration ${RELEASE}.el7 \
-                -C build/skel/el7 \
+                --iteration ${RELEASE}.el${EL_VERSION} \
+                -C ${TEMPLATE_DIR} \
                 -s dir -v ${VERSION}  \
                 --license "${LICENSE}" \
                 --vendor "${VENDOR}" \
@@ -205,13 +207,16 @@ build() {
 # Startup
 ##################################################
 
-while getopts ':v:' o
+while getopts ':v:l:' o
 do
     case $o in
     v) VERSION=$OPTARG ;;
+    l) EL_VERSION=$OPTARG ;;
     h|*) usage ;;
     esac
 done
 shift $((OPTIND-1))
+
+TEMPLATE_DIR=build/skel/el${EL_VERSION}
 
 build

@@ -18,6 +18,8 @@ declare DESC="Gravitee.io Alert Engine"
 declare MAINTAINER="David BRASSELY <david.brassely@graviteesource.com>"
 declare DOCKER_WDIR="/tmp/fpm"
 declare DOCKER_FPM="graviteeio/fpm"
+declare EL_VERSION=""
+declare TEMPLATE_DIR=""
 
 clean() {
 	rm -rf build/skel/*
@@ -40,12 +42,12 @@ download() {
 build_alert_engine() {
 	rm -fr build/skel/
 
-	mkdir -p build/skel/el7/opt/graviteeio/ae/graviteeio-ae-engine-${VERSION}
-	cp -fr .staging/gravitee-ae-standalone-${VERSION}/* build/skel/el7/opt/graviteeio/ae/graviteeio-ae-engine-${VERSION}
-	ln -sf build/skel/el7/opt/graviteeio/ae/graviteeio-ae-engine-${VERSION} build/skel/el7/opt/graviteeio/ae/engine
+	mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/ae/graviteeio-ae-engine-${VERSION}
+	cp -fr .staging/gravitee-ae-standalone-${VERSION}/* ${TEMPLATE_DIR}/opt/graviteeio/ae/graviteeio-ae-engine-${VERSION}
+	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/ae/graviteeio-ae-engine-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/ae/engine
 
-	mkdir -p build/skel/el7/etc/systemd/system/
-	cp build/files/graviteeio-ae-engine.service build/skel/el7/etc/systemd/system/
+	mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
+	cp build/files/graviteeio-ae-engine.service ${TEMPLATE_DIR}/etc/systemd/system/
 
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
 		--rpm-user ${USER} \
@@ -56,8 +58,8 @@ build_alert_engine() {
         	--after-install build/scripts/engine/postinst.rpm \
         	--before-remove build/scripts/engine/prerm.rpm \
         	--after-remove build/scripts/engine/postrm.rpm \
-                --iteration ${RELEASE}.el7 \
-                -C build/skel/el7 \
+                --iteration ${RELEASE}.el${EL_VERSION} \
+                -C ${TEMPLATE_DIR} \
 		-s dir -v ${VERSION}  \
   		--license "${LICENSE}" \
   		--vendor "${VENDOR}" \
@@ -66,8 +68,8 @@ build_alert_engine() {
   		--url "${URL}" \
   		--description  "${DESC}: Alert Engine" \
   		--depends java-1.8.0-openjdk \
-  		--config-files build/skel/el7/opt/graviteeio/ae/graviteeio-ae-engine-${VERSION}/config \
-		--config-files build/skel/el7/opt/graviteeio/ae/graviteeio-ae-engine-${VERSION}/license \
+  		--config-files ${TEMPLATE_DIR}/opt/graviteeio/ae/graviteeio-ae-engine-${VERSION}/config \
+		--config-files ${TEMPLATE_DIR}/opt/graviteeio/ae/graviteeio-ae-engine-${VERSION}/license \
   		--verbose \
 		-n ${PKGNAME}-engine
 }
@@ -82,13 +84,16 @@ build() {
 # Startup
 ##################################################
 
-while getopts ':v:' o
+while getopts ':v:l:' o
 do
     case $o in
     v) VERSION=$OPTARG ;;
+    l) EL_VERSION=$OPTARG ;;
     h|*) usage ;;
     esac
 done
 shift $((OPTIND-1))
+
+TEMPLATE_DIR=build/skel/el${EL_VERSION}
 
 build
