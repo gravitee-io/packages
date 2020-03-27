@@ -143,7 +143,6 @@ build_full() {
         # Dirty hack to avoid issues with FPM
         rm -fr build/skel/
         mkdir -p build/skel/el7
-        #touch build/skel/el7/.empty
 
         docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
                 --rpm-user ${USER} \
@@ -165,6 +164,32 @@ build_full() {
                 -n ${PKGNAME}
 }
 
+build_full_with_dependencies() {
+        # Dirty hack to avoid issues with FPM
+        rm -fr build/skel/
+        mkdir -p build/skel/el7
+
+        docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
+                --rpm-user ${USER} \
+                --rpm-group ${USER} \
+                --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
+                --iteration ${RELEASE}.el7 \
+                -C build/skel/el7 \
+                -s dir -v ${VERSION}  \
+                --license "${LICENSE}" \
+                --vendor "${VENDOR}" \
+                --maintainer "${MAINTAINER}" \
+                --architecture ${ARCH} \
+                --url "${URL}" \
+                --description  "${DESC}" \
+                --depends "${PKGNAME}-management-ui >= ${VERSION}" \
+                --depends "${PKGNAME}-management-api >= ${VERSION}" \
+                --depends "${PKGNAME}-gateway >= ${VERSION}" \
+		--depends "mongodb-org >= 3.6.17" \
+                --verbose \
+                -n ${PKGNAME}-with-dependencies
+}
+
 build() {
 	clean
 	download
@@ -172,6 +197,7 @@ build() {
 	build_management_api
 	build_management_ui
 	build_full
+	build_full_with_dependencies
 }
 
 ##################################################
