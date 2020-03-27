@@ -1,0 +1,5 @@
+#!/bin/sh
+
+rm -fr /opt/graviteeio/ae/graviteeio-ae-engine-%{version}/logs
+rm -fr /opt/graviteeio/ae/graviteeio-ae-engine-%{version}/plugins/.work
+

@@ -139,12 +139,39 @@ build_management_ui() {
                 -n ${PKGNAME}-management-ui
 }
 
+build_full() {
+	# Dirty hack to avoid issues with FPM
+	rm -fr build/skel/
+        mkdir -p build/skel/el7
+	#touch build/skel/el7/.empty
+
+	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
+                --rpm-user ${USER} \
+                --rpm-group ${USER} \
+                --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
+                --iteration ${RELEASE}.el7 \
+		-C build/skel/el7 \
+                -s dir -v ${VERSION}  \
+                --license "${LICENSE}" \
+                --vendor "${VENDOR}" \
+                --maintainer "${MAINTAINER}" \
+                --architecture ${ARCH} \
+                --url "${URL}" \
+                --description  "${DESC}" \
+                --depends "${PKGNAME}-management-ui >= ${VERSION}" \
+		--depends "${PKGNAME}-management-api >= ${VERSION}" \
+		--depends "${PKGNAME}-gateway >= ${VERSION}" \
+                --verbose \
+                -n ${PKGNAME}
+}
+
 build() {
 	clean
 	download
 	build_api_gateway
 	build_management_api
 	build_management_ui
+	build_full
 }
 
 ##################################################

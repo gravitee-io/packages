@@ -1,0 +1,4 @@
+#!/bin/sh
+
+ln -sf /opt/graviteeio/ae/graviteeio-ae-engine-%{version}/ /opt/graviteeio/ae/engine
+chown -R gravitee:gravitee /opt/graviteeio/ae/engine
