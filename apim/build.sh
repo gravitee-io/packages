@@ -70,8 +70,6 @@ build_api_gateway() {
   		--config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-gateway-${VERSION}/config \
   		--verbose \
 		-n ${PKGNAME}-gateway
-
-	mv ${PKGNAME}-gateway-${VERSION}-${RELEASE}.noarch.rpm ${PKGNAME}-gateway-${VERSION}.rpm 
 }
 
 build_management_api() {
@@ -106,8 +104,6 @@ build_management_api() {
                 --config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-management-api-${VERSION}/config \
                 --verbose \
                 -n ${PKGNAME}-management-api
-
-	mv ${PKGNAME}-management-api-${VERSION}-${RELEASE}.noarch.rpm ${PKGNAME}-management-api-${VERSION}.rpm
 }
 
 build_management_ui() {
@@ -142,8 +138,6 @@ build_management_ui() {
 		--config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-management-ui-${VERSION}/constants.json \
                 --verbose \
                 -n ${PKGNAME}-management-ui
-
-	mv ${PKGNAME}-management-ui-${VERSION}-${RELEASE}.noarch.rpm ${PKGNAME}-management-ui-${VERSION}.rpm
 }
 
 build_full() {
@@ -169,8 +163,6 @@ build_full() {
 		--depends "${PKGNAME}-gateway >= ${VERSION}" \
                 --verbose \
                 -n ${PKGNAME}
-
-	mv ${PKGNAME}-${VERSION}-${RELEASE}.noarch.rpm ${PKGNAME}-${VERSION}.rpm
 }
 
 build_full_with_dependencies() {
@@ -198,8 +190,6 @@ build_full_with_dependencies() {
 		--depends "mongodb-org >= 3.6.17" \
                 --verbose \
                 -n ${PKGNAME}-with-dependencies
-
-	mv ${PKGNAME}-with-dependencies-${VERSION}-${RELEASE}.noarch.rpm ${PKGNAME}-with-dependencies-${VERSION}.rpm
 }
 
 build() {
