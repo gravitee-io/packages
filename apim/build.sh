@@ -18,7 +18,6 @@ declare DESC="Gravitee.io API Management"
 declare MAINTAINER="David BRASSELY <david.brassely@graviteesource.com>"
 declare DOCKER_WDIR="/tmp/fpm"
 declare DOCKER_FPM="graviteeio/fpm"
-declare EL_VERSION=""
 declare TEMPLATE_DIR="";
 
 clean() {
@@ -58,7 +57,7 @@ build_api_gateway() {
         	--after-install build/scripts/gateway/postinst.rpm \
         	--before-remove build/scripts/gateway/prerm.rpm \
         	--after-remove build/scripts/gateway/postrm.rpm \
-                --iteration ${RELEASE}.el${EL_VERSION} \
+                --iteration ${RELEASE} \
                 -C ${TEMPLATE_DIR} \
 		-s dir -v ${VERSION}  \
   		--license "${LICENSE}" \
@@ -71,6 +70,8 @@ build_api_gateway() {
   		--config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-gateway-${VERSION}/config \
   		--verbose \
 		-n ${PKGNAME}-gateway
+
+	mv ${PKGNAME}-gateway-${VERSION}-${RELEASE}.noarch.rpm ${PKGNAME}-gateway-${VERSION}.rpm 
 }
 
 build_management_api() {
@@ -92,7 +93,7 @@ build_management_api() {
                 --after-install build/scripts/management-api/postinst.rpm \
                 --before-remove build/scripts/management-api/prerm.rpm \
                 --after-remove build/scripts/management-api/postrm.rpm \
-                --iteration ${RELEASE}.el${EL_VERSION} \
+                --iteration ${RELEASE} \
                 -C ${TEMPLATE_DIR} \
                 -s dir -v ${VERSION}  \
                 --license "${LICENSE}" \
@@ -105,6 +106,8 @@ build_management_api() {
                 --config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-management-api-${VERSION}/config \
                 --verbose \
                 -n ${PKGNAME}-management-api
+
+	mv ${PKGNAME}-management-api-${VERSION}-${RELEASE}.noarch.rpm ${PKGNAME}-management-api-${VERSION}.rpm
 }
 
 build_management_ui() {
@@ -126,7 +129,7 @@ build_management_ui() {
                 --after-install build/scripts/management-ui/postinst.rpm \
                 --before-remove build/scripts/management-ui/prerm.rpm \
                 --after-remove build/scripts/management-ui/postrm.rpm \
-                --iteration ${RELEASE}.el${EL_VERSION} \
+                --iteration ${RELEASE} \
                 -C ${TEMPLATE_DIR} \
                 -s dir -v ${VERSION}  \
                 --license "${LICENSE}" \
@@ -139,6 +142,8 @@ build_management_ui() {
 		--config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-management-ui-${VERSION}/constants.json \
                 --verbose \
                 -n ${PKGNAME}-management-ui
+
+	mv ${PKGNAME}-management-ui-${VERSION}-${RELEASE}.noarch.rpm ${PKGNAME}-management-ui-${VERSION}.rpm
 }
 
 build_full() {
@@ -150,7 +155,7 @@ build_full() {
                 --rpm-user ${USER} \
                 --rpm-group ${USER} \
                 --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
-                --iteration ${RELEASE}.el${EL_VERSION} \
+                --iteration ${RELEASE} \
 		-C ${TEMPLATE_DIR} \
                 -s dir -v ${VERSION}  \
                 --license "${LICENSE}" \
@@ -164,6 +169,8 @@ build_full() {
 		--depends "${PKGNAME}-gateway >= ${VERSION}" \
                 --verbose \
                 -n ${PKGNAME}
+
+	mv ${PKGNAME}-${VERSION}-${RELEASE}.noarch.rpm ${PKGNAME}-${VERSION}.rpm
 }
 
 build_full_with_dependencies() {
@@ -175,7 +182,7 @@ build_full_with_dependencies() {
                 --rpm-user ${USER} \
                 --rpm-group ${USER} \
                 --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
-                --iteration ${RELEASE}.el${EL_VERSION} \
+                --iteration ${RELEASE} \
                 -C ${TEMPLATE_DIR} \
                 -s dir -v ${VERSION}  \
                 --license "${LICENSE}" \
@@ -191,6 +198,8 @@ build_full_with_dependencies() {
 		--depends "mongodb-org >= 3.6.17" \
                 --verbose \
                 -n ${PKGNAME}-with-dependencies
+
+	mv ${PKGNAME}-with-dependencies-${VERSION}-${RELEASE}.noarch.rpm ${PKGNAME}-with-dependencies-${VERSION}.rpm
 }
 
 build() {
@@ -211,12 +220,11 @@ while getopts ':v:l:' o
 do
     case $o in
     v) VERSION=$OPTARG ;;
-    l) EL_VERSION=$OPTARG ;;
     h|*) usage ;;
     esac
 done
 shift $((OPTIND-1))
 
-TEMPLATE_DIR=build/skel/el${EL_VERSION}
+TEMPLATE_DIR=build/skel/el
 
 build
