@@ -46,7 +46,7 @@ esac
 
 # Stops the service
 if [ "$STOP_REQUIRED" = "true" ]; then
-    echo -n "Stopping gravitee.io api gateway service..."
+    echo -n "Stopping gravitee.io management api service..."
     if command -v systemctl >/dev/null; then
         systemctl --no-reload stop ${SERVICE_NAME}.service
 

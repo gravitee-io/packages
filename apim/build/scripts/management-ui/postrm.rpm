@@ -50,7 +50,7 @@ case "$1" in
     ;;
 esac
 
-if [ "$REMOVE_USER_AND_GROUP" = "true" && $IN_USE -eq 1 ]; then
+if [[ "$REMOVE_USER_AND_GROUP" = "true" && $IN_USE -eq 1 ]]; then
     if id gravitee > /dev/null 2>&1 ; then
         userdel gravitee
     fi
