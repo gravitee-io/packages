@@ -1,15 +1,81 @@
-#!/bin/sh
+#!/bin/bash
+#
+# This script is executed in the post-removal phase
+#
+#   On Debian,
+#       $1=remove    : indicates a removal
+#       $1=purge     : indicates an upgrade
+#
+#   On RedHat,
+#       $1=0         : indicates a removal
+#       $1=1         : indicates an upgrade
 
 USERNAME=gravitee
+REMOVE_DIRS=falses
+REMOVE_USER_AND_GROUP=false
 
-in_use=$(rpm -qa | grep gravitee | wc -l)
+IN_USE=$(rpm -qa | grep gravitee | wc -l)
 
-if [[ $in_use -gt 1 ]]; then
+if [[ $IN_USE -gt 1 ]]; then
   echo "${USERNAME} still in use by an other process, skipping..."
 fi
 
-if [[ "$1" = "0" && $in_use -eq 1 ]]; then
-  getent passwd $USERNAME && userdel $USERNAME > /dev/null
+case "$1" in
+
+    # Debian ####################################################
+    remove)
+        REMOVE_DIRS=true
+    ;;
+
+    purge)
+        REMOVE_DIRS=true
+        REMOVE_USER_AND_GROUP=true
+    ;;
+    failed-upgrade|abort-install|abort-upgrade|disappear|upgrade|disappear)
+    ;;
+
+    # RedHat ####################################################
+    0)
+        REMOVE_DIRS=true
+        REMOVE_USER_AND_GROUP=true
+    ;;
+    1)
+        # If $1=1 this is an upgrade
+        IS_UPGRADE=true
+    ;;
+
+    *)
+        echo "post remove script called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+if [ "$REMOVE_DIRS" = "true" ]; then
+    if [ -d /opt/graviteeio/apim/graviteeio-management-api-%{version}/data ]; then
+        echo -n "Deleting data directory..."
+        rm -rf /opt/graviteeio/apim/graviteeio-management-api-%{version}/data
+        echo " OK"
+    fi
+
+    if [ -d /opt/graviteeio/apim/graviteeio-management-api-%{version}/logs ]; then
+        echo -n "Deleting logs directory..."
+        rm -rf /opt/graviteeio/apim/graviteeio-management-api-%{version}/logs
+        echo " OK"
+    fi
+
+    if [ -d /opt/graviteeio/apim/graviteeio-management-api-%{version}/plugins ]; then
+        echo -n "Deleting plugins directory..."
+        rm -rf /opt/graviteeio/apim/graviteeio-management-api-%{version}/plugins
+        echo " OK"
+    fi
 fi
 
-exit 0
+if [ "$REMOVE_USER_AND_GROUP" = "true" && $IN_USE -eq 1 ]; then
+    if id gravitee > /dev/null 2>&1 ; then
+        userdel gravitee
+    fi
+
+    if getent group gravitee > /dev/null 2>&1 ; then
+        groupdel gravitee
+    fi
+fi

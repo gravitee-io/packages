@@ -66,7 +66,6 @@ build_api_gateway() {
   		--architecture ${ARCH} \
   		--url "${URL}" \
   		--description  "${DESC}: API Gateway" \
-  		--depends java-1.8.0-openjdk \
   		--config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-gateway-${VERSION}/config \
   		--verbose \
 		-n ${PKGNAME}-gateway
@@ -100,7 +99,6 @@ build_management_api() {
                 --architecture ${ARCH} \
                 --url "${URL}" \
                 --description  "${DESC}: Management API" \
-                --depends java-1.8.0-openjdk \
                 --config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-management-api-${VERSION}/config \
                 --verbose \
                 -n ${PKGNAME}-management-api
@@ -165,33 +163,6 @@ build_full() {
                 -n ${PKGNAME}
 }
 
-build_full_with_dependencies() {
-	# Dirty hack to avoid issues with FPM
-        rm -fr build/skel/
-        mkdir -p ${TEMPLATE_DIR}
-
-        docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
-                --rpm-user ${USER} \
-                --rpm-group ${USER} \
-                --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
-                --iteration ${RELEASE} \
-                -C ${TEMPLATE_DIR} \
-                -s dir -v ${VERSION}  \
-                --license "${LICENSE}" \
-                --vendor "${VENDOR}" \
-                --maintainer "${MAINTAINER}" \
-                --architecture ${ARCH} \
-                --url "${URL}" \
-                --description  "${DESC}" \
-                --depends "${PKGNAME}-management-ui >= ${VERSION}" \
-                --depends "${PKGNAME}-management-api >= ${VERSION}" \
-                --depends "${PKGNAME}-gateway >= ${VERSION}" \
-		--depends "elasticsearch >= 6.8.7" \
-		--depends "mongodb-org >= 3.6.17" \
-                --verbose \
-                -n ${PKGNAME}-with-dependencies
-}
-
 build() {
 	clean
 	download
@@ -199,7 +170,6 @@ build() {
 	build_management_api
 	build_management_ui
 	build_full
-	build_full_with_dependencies
 }
 
 ##################################################
