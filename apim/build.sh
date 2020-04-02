@@ -82,7 +82,7 @@ build_management_api() {
 	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-management-api-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim/management-api
 
 	mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
-	cp build/files/graviteeio-apim-management-api.service ${TEMPLATE_DIR}/etc/systemd/system/
+	cp build/files/systemd/graviteeio-apim-management-api.service ${TEMPLATE_DIR}/etc/systemd/system/
 
         mkdir -p ${TEMPLATE_DIR}/etc/init.d
         cp build/files/init.d/graviteeio-apim-management-api ${TEMPLATE_DIR}/etc/init.d
