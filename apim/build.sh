@@ -111,8 +111,8 @@ build_management_ui() {
         cp -fr .staging/graviteeio-full-${VERSION}/graviteeio-management-ui-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim
 	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-management-ui-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim/management-ui
 
-	mkdir -p ${TEMPLATE_DIR}/etc/nginx/default.d/
-	cp build/files/graviteeio-management-ui.conf ${TEMPLATE_DIR}/etc/nginx/default.d/
+	mkdir -p ${TEMPLATE_DIR}/etc/nginx/conf.d/
+	cp build/files/graviteeio-apim-management-ui.conf ${TEMPLATE_DIR}/etc/nginx/conf.d/
 
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
                 --rpm-user ${USER} \
