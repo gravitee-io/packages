@@ -46,12 +46,15 @@ build_api_gateway() {
 	ln -sf build/skel/el7/opt/graviteeio/apim/graviteeio-gateway-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim/gateway
 
 	mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
-	cp build/files/graviteeio-apim-gateway.service ${TEMPLATE_DIR}/etc/systemd/system/
+        cp build/files/systemd/graviteeio-apim-gateway.service ${TEMPLATE_DIR}/etc/systemd/system/
+
+        mkdir -p ${TEMPLATE_DIR}/etc/init.d
+        cp build/files/init.dgraviteeio-apim-gateway.service ${TEMPLATE_DIR}/etc/init.d
 
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
 		--rpm-user ${USER} \
           	--rpm-group ${USER} \
-          	--rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
+          	--rpm-attr "0750,${USER},${USER}:/opt/graviteeio" \
           	--directories /opt/graviteeio \
         	--before-install build/scripts/gateway/preinst.rpm \
         	--after-install build/scripts/gateway/postinst.rpm \
@@ -81,10 +84,13 @@ build_management_api() {
 	mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
 	cp build/files/graviteeio-apim-management-api.service ${TEMPLATE_DIR}/etc/systemd/system/
 
+        mkdir -p ${TEMPLATE_DIR}/etc/init.d
+        cp build/files/init.dgraviteeio-apim-management-api.service ${TEMPLATE_DIR}/etc/init.d
+
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
                 --rpm-user ${USER} \
                 --rpm-group ${USER} \
-                --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
+                --rpm-attr "0750,${USER},${USER}:/opt/graviteeio" \
                 --directories /opt/graviteeio \
                 --before-install build/scripts/management-api/preinst.rpm \
                 --after-install build/scripts/management-api/postinst.rpm \
@@ -117,7 +123,7 @@ build_management_ui() {
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
                 --rpm-user ${USER} \
                 --rpm-group ${USER} \
-                --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
+                --rpm-attr "0750,${USER},${USER}:/opt/graviteeio" \
                 --directories /opt/graviteeio \
 		--before-install build/scripts/management-ui/preinst.rpm \
                 --after-install build/scripts/management-ui/postinst.rpm \
@@ -146,7 +152,7 @@ build_full() {
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
                 --rpm-user ${USER} \
                 --rpm-group ${USER} \
-                --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
+                --rpm-attr "0750,${USER},${USER}:/opt/graviteeio" \
                 --iteration ${RELEASE} \
 		-C ${TEMPLATE_DIR} \
                 -s dir -v ${VERSION}  \
