@@ -49,7 +49,7 @@ build_api_gateway() {
         cp build/files/systemd/graviteeio-apim-gateway.service ${TEMPLATE_DIR}/etc/systemd/system/
 
         mkdir -p ${TEMPLATE_DIR}/etc/init.d
-        cp build/files/init.d/graviteeio-apim-gateway.service ${TEMPLATE_DIR}/etc/init.d
+        cp build/files/init.d/graviteeio-apim-gateway ${TEMPLATE_DIR}/etc/init.d
 
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
 		--rpm-user ${USER} \
@@ -85,7 +85,7 @@ build_management_api() {
 	cp build/files/graviteeio-apim-management-api.service ${TEMPLATE_DIR}/etc/systemd/system/
 
         mkdir -p ${TEMPLATE_DIR}/etc/init.d
-        cp build/files/init.d/graviteeio-apim-management-api.service ${TEMPLATE_DIR}/etc/init.d
+        cp build/files/init.d/graviteeio-apim-management-api ${TEMPLATE_DIR}/etc/init.d
 
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
                 --rpm-user ${USER} \
