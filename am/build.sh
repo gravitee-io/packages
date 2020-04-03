@@ -14,11 +14,10 @@ declare URL="https://gravitee.io"
 declare RELEASE="0"
 declare USER="gravitee"
 declare ARCH="noarch"
-declare DESC="Gravitee.io Access Management"
+declare DESC="Gravitee.io Access Management 2.x"
 declare MAINTAINER="David BRASSELY <david.brassely@graviteesource.com>"
 declare DOCKER_WDIR="/tmp/fpm"
 declare DOCKER_FPM="graviteeio/fpm"
-declare EL_VERSION=""
 declare TEMPLATE_DIR=""
 
 clean() {
@@ -47,18 +46,21 @@ build_access_gateway() {
 	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/am/graviteeio-am-gateway-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/am/gateway
 
 	mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
-	cp build/files/graviteeio-am-gateway.service ${TEMPLATE_DIR}/etc/systemd/system/
+        cp build/files/systemd/graviteeio-am-gateway.service ${TEMPLATE_DIR}/etc/systemd/system/
+
+        mkdir -p ${TEMPLATE_DIR}/etc/init.d
+        cp build/files/init.d/graviteeio-am-gateway ${TEMPLATE_DIR}/etc/init.d
 
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
 		--rpm-user ${USER} \
           	--rpm-group ${USER} \
-          	--rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
+          	--rpm-attr "0750,${USER},${USER}:/opt/graviteeio" \
           	--directories /opt/graviteeio \
         	--before-install build/scripts/gateway/preinst.rpm \
         	--after-install build/scripts/gateway/postinst.rpm \
         	--before-remove build/scripts/gateway/prerm.rpm \
         	--after-remove build/scripts/gateway/postrm.rpm \
-                --iteration ${RELEASE}.el${EL_VERSION} \
+                --iteration ${RELEASE} \
                 -C ${TEMPLATE_DIR} \
 		-s dir -v ${VERSION}  \
   		--license "${LICENSE}" \
@@ -67,7 +69,6 @@ build_access_gateway() {
   		--architecture ${ARCH} \
   		--url "${URL}" \
   		--description  "${DESC}: Access Gateway" \
-  		--depends java-1.8.0-openjdk \
   		--config-files ${TEMPLATE_DIR}/opt/graviteeio/am/graviteeio-am-gateway-${VERSION}/config \
   		--verbose \
 		-n ${PKGNAME}-gateway
@@ -80,19 +81,22 @@ build_management_api() {
         cp -fr .staging/graviteeio-am-full-${VERSION}/graviteeio-am-management-api-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/am
 	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/am/graviteeio-am-management-api-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/am/management-api
 
-	mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
-	cp build/files/graviteeio-am-management-api.service ${TEMPLATE_DIR}/etc/systemd/system/
+        mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
+	cp build/files/systemd/graviteeio-am-management-api.service ${TEMPLATE_DIR}/etc/systemd/system/
+
+        mkdir -p ${TEMPLATE_DIR}/etc/init.d
+        cp build/files/init.d/graviteeio-am-management-api ${TEMPLATE_DIR}/etc/init.d
 
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
                 --rpm-user ${USER} \
                 --rpm-group ${USER} \
-                --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
+                --rpm-attr "0750,${USER},${USER}:/opt/graviteeio" \
                 --directories /opt/graviteeio \
                 --before-install build/scripts/management-api/preinst.rpm \
                 --after-install build/scripts/management-api/postinst.rpm \
                 --before-remove build/scripts/management-api/prerm.rpm \
                 --after-remove build/scripts/management-api/postrm.rpm \
-                --iteration ${RELEASE}.el${EL_VERSION} \
+                --iteration ${RELEASE} \
                 -C ${TEMPLATE_DIR} \
                 -s dir -v ${VERSION}  \
                 --license "${LICENSE}" \
@@ -101,7 +105,6 @@ build_management_api() {
                 --architecture ${ARCH} \
                 --url "${URL}" \
                 --description  "${DESC}: Management API" \
-                --depends java-1.8.0-openjdk \
                 --config-files ${TEMPLATE_DIR}/opt/graviteeio/am/graviteeio-am-management-api-${VERSION}/config \
                 --verbose \
                 -n ${PKGNAME}-management-api
@@ -120,13 +123,13 @@ build_management_ui() {
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
                 --rpm-user ${USER} \
                 --rpm-group ${USER} \
-                --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
+                --rpm-attr "0750,${USER},${USER}:/opt/graviteeio" \
                 --directories /opt/graviteeio \
 		--before-install build/scripts/management-ui/preinst.rpm \
                 --after-install build/scripts/management-ui/postinst.rpm \
                 --before-remove build/scripts/management-ui/prerm.rpm \
                 --after-remove build/scripts/management-ui/postrm.rpm \
-                --iteration ${RELEASE}.el${EL_VERSION} \
+                --iteration ${RELEASE} \
                 -C ${TEMPLATE_DIR} \
                 -s dir -v ${VERSION}  \
                 --license "${LICENSE}" \
@@ -149,8 +152,8 @@ build_full() {
         docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
                 --rpm-user ${USER} \
                 --rpm-group ${USER} \
-                --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
-                --iteration ${RELEASE}.el${EL_VERSION} \
+                --rpm-attr "0750,${USER},${USER}:/opt/graviteeio" \
+                --iteration ${RELEASE} \
                 -C ${TEMPLATE_DIR} \
                 -s dir -v ${VERSION}  \
                 --license "${LICENSE}" \
@@ -166,32 +169,6 @@ build_full() {
                 -n ${PKGNAME}
 }
 
-build_full_with_dependencies() {
-        # Dirty hack to avoid issues with FPM
-        rm -fr build/skel/
-        mkdir -p ${TEMPLATE_DIR}
-
-        docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
-                --rpm-user ${USER} \
-                --rpm-group ${USER} \
-                --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
-                --iteration ${RELEASE}.el${EL_VERSION} \
-                -C ${TEMPLATE_DIR} \
-                -s dir -v ${VERSION}  \
-                --license "${LICENSE}" \
-                --vendor "${VENDOR}" \
-                --maintainer "${MAINTAINER}" \
-                --architecture ${ARCH} \
-                --url "${URL}" \
-                --description  "${DESC}" \
-                --depends "${PKGNAME}-management-ui >= ${VERSION}" \
-                --depends "${PKGNAME}-management-api >= ${VERSION}" \
-                --depends "${PKGNAME}-gateway >= ${VERSION}" \
-		--depends "mongodb-org >= 3.6.17" \
-                --verbose \
-                -n ${PKGNAME}-with-dependencies
-}
-
 build() {
 	clean
 	download
@@ -199,23 +176,21 @@ build() {
 	build_management_api
 	build_management_ui
 	build_full
-	build_full_with_dependencies
 }
 
 ##################################################
 # Startup
 ##################################################
 
-while getopts ':v:l:' o
+while getopts ':v:' o
 do
     case $o in
     v) VERSION=$OPTARG ;;
-    l) EL_VERSION=$OPTARG ;;
     h|*) usage ;;
     esac
 done
 shift $((OPTIND-1))
 
-TEMPLATE_DIR=build/skel/el${EL_VERSION}
+TEMPLATE_DIR=build/skel/el
 
 build

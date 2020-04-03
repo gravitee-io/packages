@@ -1,19 +1,19 @@
 #!/bin/bash
 #
-# Gravitee.io APIM - API Gateway <summary>
+# Gravitee.io AE - Alert Engine <summary>
 #
 # chkconfig:   2345 80 20
-# description: Starts and stops a single Gravitee.io API Gateway instance on this system
+# description: Starts and stops a single Gravitee.io Alert Engine instance on this system
 #
 
 ### BEGIN INIT INFO
-# Provides: graviteeio-apim-gateway
+# Provides: graviteeio-ae-engine
 # Required-Start: $network $named
 # Required-Stop: $network $named
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
-# Short-Description: This service manages the graviteeio-apim-gateway daemon
-# Description: Gravitee.io - API Management - API Gateway
+# Short-Description: This service manages the graviteeio-ae-engine daemon
+# Description: Gravitee.io - Alert Engine
 ### END INIT INFO
 
 #
@@ -32,12 +32,12 @@ if [ -f /etc/rc.d/init.d/functions ]; then
 fi
 
 # Sets the default values for gravitee.io variables used in this script
-GRAVITEEIO_HOME="/opt/graviteeio/apim/gateway"
+GRAVITEEIO_HOME="/opt/graviteeio/ae/engine"
 
 PID_DIR="/var/run/graviteeio"
 
 exec="$GRAVITEEIO_HOME/bin/gravitee"
-prog="graviteeio-apim-gateway"
+prog="graviteeio-ae-engine"
 pidfile="$PID_DIR/${prog}.pid"
 
 export JAVA_HOME
@@ -45,7 +45,7 @@ export JAVA_HOME
 lockfile=/var/lock/subsys/$prog
 
 if [ ! -x "$exec" ]; then
-    echo "The graviteeio-apim-gateway startup script does not exists or it is not executable, tried: $exec"
+    echo "The graviteeio-ae-engine startup script does not exists or it is not executable, tried: $exec"
     exit 1
 fi
 

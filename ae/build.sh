@@ -14,11 +14,10 @@ declare URL="https://gravitee.io"
 declare RELEASE="0"
 declare USER="gravitee"
 declare ARCH="noarch"
-declare DESC="Gravitee.io Alert Engine"
+declare DESC="Gravitee.io Alert Engine 1.x"
 declare MAINTAINER="David BRASSELY <david.brassely@graviteesource.com>"
 declare DOCKER_WDIR="/tmp/fpm"
 declare DOCKER_FPM="graviteeio/fpm"
-declare EL_VERSION=""
 declare TEMPLATE_DIR=""
 
 clean() {
@@ -47,7 +46,10 @@ build_alert_engine() {
 	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/ae/graviteeio-ae-engine-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/ae/engine
 
 	mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
-	cp build/files/graviteeio-ae-engine.service ${TEMPLATE_DIR}/etc/systemd/system/
+    cp build/files/systemd/graviteeio-ae-engine.service ${TEMPLATE_DIR}/etc/systemd/system/
+
+    mkdir -p ${TEMPLATE_DIR}/etc/init.d
+    cp build/files/init.d/graviteeio-ae-engine ${TEMPLATE_DIR}/etc/init.d
 
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
 		--rpm-user ${USER} \
@@ -58,7 +60,7 @@ build_alert_engine() {
         	--after-install build/scripts/engine/postinst.rpm \
         	--before-remove build/scripts/engine/prerm.rpm \
         	--after-remove build/scripts/engine/postrm.rpm \
-                --iteration ${RELEASE}.el${EL_VERSION} \
+                --iteration ${RELEASE} \
                 -C ${TEMPLATE_DIR} \
 		-s dir -v ${VERSION}  \
   		--license "${LICENSE}" \
@@ -67,7 +69,6 @@ build_alert_engine() {
   		--architecture ${ARCH} \
   		--url "${URL}" \
   		--description  "${DESC}: Alert Engine" \
-  		--depends java-1.8.0-openjdk \
   		--config-files ${TEMPLATE_DIR}/opt/graviteeio/ae/graviteeio-ae-engine-${VERSION}/config \
 		--config-files ${TEMPLATE_DIR}/opt/graviteeio/ae/graviteeio-ae-engine-${VERSION}/license \
   		--verbose \
@@ -84,16 +85,15 @@ build() {
 # Startup
 ##################################################
 
-while getopts ':v:l:' o
+while getopts ':v:' o
 do
     case $o in
     v) VERSION=$OPTARG ;;
-    l) EL_VERSION=$OPTARG ;;
     h|*) usage ;;
     esac
 done
 shift $((OPTIND-1))
 
-TEMPLATE_DIR=build/skel/el${EL_VERSION}
+TEMPLATE_DIR=build/skel/el
 
 build
