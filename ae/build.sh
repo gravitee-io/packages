@@ -54,7 +54,7 @@ build_alert_engine() {
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
 		--rpm-user ${USER} \
           	--rpm-group ${USER} \
-          	--rpm-attr "0750,${USER},${USER}:/opt/graviteeio" \
+          	--rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
 			--rpm-attr "0755,root,root:/etc/init.d/graviteeio-ae-engine" \
           	--directories /opt/graviteeio \
         	--before-install build/scripts/engine/preinst.rpm \
