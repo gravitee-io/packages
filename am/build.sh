@@ -126,6 +126,7 @@ build_management_ui() {
                 --rpm-user ${USER} \
                 --rpm-group ${USER} \
                 --rpm-attr "0750,${USER},${USER}:/opt/graviteeio" \
+                --rpm-attr "0755,${USER},${USER}:/opt/graviteeio/am/management-ui" \
                 --directories /opt/graviteeio \
 		--before-install build/scripts/management-ui/preinst.rpm \
                 --after-install build/scripts/management-ui/postinst.rpm \
