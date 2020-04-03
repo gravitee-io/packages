@@ -63,7 +63,7 @@ start() {
     cd $GRAVITEEIO_HOME
     echo -n $"Starting $prog: "
     # if not running, start it up here, usually something like "daemon $exec"
-    daemon --user gravitee --pidfile $pidfile $exec -p $pidfile -d
+    daemon --user gravitee --pidfile $pidfile $exec -d -p=$pidfile
     retval=$?
     echo
     [ $retval -eq 0 ] && touch $lockfile
@@ -73,7 +73,7 @@ start() {
 stop() {
     echo -n $"Stopping $prog: "
     # stop it here, often "killproc $prog"
-    killproc -p $pidfile -d ${stopping.timeout} $prog
+    killproc -p $pidfile  $prog
     retval=$?
     echo
     [ $retval -eq 0 ] && rm -f $lockfile
@@ -101,7 +101,6 @@ rh_status() {
 rh_status_q() {
     rh_status >/dev/null 2>&1
 }
-
 
 case "$1" in
     start)
