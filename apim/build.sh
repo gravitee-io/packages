@@ -55,6 +55,7 @@ build_api_gateway() {
 		--rpm-user ${USER} \
           	--rpm-group ${USER} \
           	--rpm-attr "0750,${USER},${USER}:/opt/graviteeio" \
+                --rpm-attr "0755,root,root:/etc/init.d/graviteeio-apim-gateway" \
           	--directories /opt/graviteeio \
         	--before-install build/scripts/gateway/preinst.rpm \
         	--after-install build/scripts/gateway/postinst.rpm \
@@ -91,6 +92,7 @@ build_management_api() {
                 --rpm-user ${USER} \
                 --rpm-group ${USER} \
                 --rpm-attr "0750,${USER},${USER}:/opt/graviteeio" \
+                --rpm-attr "0755,root,root:/etc/init.d/graviteeio-apim-management-api" \
                 --directories /opt/graviteeio \
                 --before-install build/scripts/management-api/preinst.rpm \
                 --after-install build/scripts/management-api/postinst.rpm \

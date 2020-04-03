@@ -1,6 +1,74 @@
-#!/bin/sh
+#!/bin/bash
+#
+# This script is executed in the pre-installation phase
+#
+#   On Debian,
+#       $1=install : indicates a new install
+#       $1=upgrade : indicates an upgrade
+#
+#   On RedHat,
+#       $1=1       : indicates a new install
+#       $1=2       : indicates an upgrade
 
-if [ "$1" = "1" ]; then
-	getent passwd gravitee > /dev/null || \
-		useradd -r -M -s /sbin/nologin -c "gravitee service account" gravitee
-fi
+err_exit() {
+    echo "$@" >&2
+    exit 1
+}
+
+case "$1" in
+
+    # Debian ####################################################
+    install|upgrade)
+
+        # Create gravitee group if not existing
+        if ! getent group gravitee > /dev/null 2>&1 ; then
+            echo -n "Creating gravitee group..."
+            addgroup --quiet --system gravitee
+            echo " OK"
+        fi
+
+        # Create gravitee user if not existing
+        if ! id gravitee > /dev/null 2>&1 ; then
+            echo -n "Creating gravitee user..."
+            adduser --quiet \
+                    --system \
+                    --no-create-home \
+                    --home /nonexistent \
+                    --ingroup gravitee \
+                    --disabled-password \
+                    --shell /bin/false \
+                    gravitee
+            echo " OK"
+        fi
+    ;;
+    abort-deconfigure|abort-upgrade|abort-remove)
+    ;;
+
+    # RedHat ####################################################
+    1|2)
+
+        # Create gravitee group if not existing
+        if ! getent group gravitee > /dev/null 2>&1 ; then
+            echo -n "Creating gravitee group..."
+            groupadd -r gravitee
+            echo " OK"
+        fi
+
+        # Create gravitee user if not existing
+        if ! id gravitee > /dev/null 2>&1 ; then
+            echo -n "Creating gravitee user..."
+            useradd --system \
+                    --no-create-home \
+                    --home-dir /nonexistent \
+                    --gid gravitee \
+                    --shell /sbin/nologin \
+                    --comment "gravitee user" \
+                    gravitee
+            echo " OK"
+        fi
+    ;;
+
+    *)
+        err_exit "pre install script called with unknown argument \`$1'"
+    ;;
+esac
