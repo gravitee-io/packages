@@ -175,7 +175,7 @@ build_portal_ui() {
                 --url "${URL}" \
                 --description  "${DESC}: Portal UI" \
                 --depends nginx \
-		--config-files "${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-portal-ui-${VERSION}/assets/*" \
+		--config-files "${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-portal-ui-${VERSION}/assets/" \
                 --verbose \
                 -n ${PKGNAME}-portal-ui
 }
