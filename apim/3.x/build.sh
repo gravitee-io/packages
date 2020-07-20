@@ -72,7 +72,7 @@ build_api_gateway() {
   		--description  "${DESC}: API Gateway" \
   		--config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-gateway-${VERSION}/config \
   		--verbose \
-		-n ${PKGNAME}-gateway
+		-n ${PKGNAME}-gateway-3x
 }
 
 build_rest_api() {
@@ -109,7 +109,7 @@ build_rest_api() {
                 --description  "${DESC}: Management API" \
                 --config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-rest-api-${VERSION}/config \
                 --verbose \
-                -n ${PKGNAME}-rest-api
+                -n ${PKGNAME}-rest-api-3x
 }
 
 build_management_ui() {
@@ -143,7 +143,7 @@ build_management_ui() {
                 --depends nginx \
 		--config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-management-ui-${VERSION}/constants.json \
                 --verbose \
-                -n ${PKGNAME}-management-ui
+                -n ${PKGNAME}-management-ui-3x
 }
 
 build_portal_ui() {
@@ -177,7 +177,7 @@ build_portal_ui() {
                 --depends nginx \
 		--config-files "${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-portal-ui-${VERSION}/assets/" \
                 --verbose \
-                -n ${PKGNAME}-portal-ui
+                -n ${PKGNAME}-portal-ui-3x
 }
 
 build_full() {
@@ -198,12 +198,12 @@ build_full() {
                 --architecture ${ARCH} \
                 --url "${URL}" \
                 --description  "${DESC}" \
-                --depends "${PKGNAME}-portal-ui >= ${VERSION}" \
-                --depends "${PKGNAME}-management-ui >= ${VERSION}" \
-		--depends "${PKGNAME}-rest-api >= ${VERSION}" \
-		--depends "${PKGNAME}-gateway >= ${VERSION}" \
+                --depends "${PKGNAME}-portal-ui-3x >= ${VERSION}" \
+                --depends "${PKGNAME}-management-ui-3x >= ${VERSION}" \
+		--depends "${PKGNAME}-rest-api-3x >= ${VERSION}" \
+		--depends "${PKGNAME}-gateway-3x >= ${VERSION}" \
                 --verbose \
-                -n ${PKGNAME}
+                -n ${PKGNAME}-3x
 }
 
 build() {
