@@ -164,9 +164,9 @@ build_full() {
                 --architecture ${ARCH} \
                 --url "${URL}" \
                 --description  "${DESC}" \
-                --depends "${PKGNAME}-management-ui >= ${VERSION}" \
-                --depends "${PKGNAME}-management-api >= ${VERSION}" \
-                --depends "${PKGNAME}-gateway >= ${VERSION}" \
+                --depends "${PKGNAME}-management-ui-3x >= ${VERSION}" \
+                --depends "${PKGNAME}-management-api-3x >= ${VERSION}" \
+                --depends "${PKGNAME}-gateway-3x >= ${VERSION}" \
                 --verbose \
                 -n ${PKGNAME}-3x
 }
