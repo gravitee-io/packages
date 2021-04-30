@@ -1,0 +1,4 @@
+#!/bin/sh
+
+ln -sf /opt/graviteeio/cockpit/graviteeio-cockpit-management-api-%{version}/ /opt/graviteeio/cockpit/management-api
+chown -R gravitee:gravitee /opt/graviteeio/cockpit/management-api
