@@ -79,8 +79,8 @@ build_rest_api() {
 	rm -fr build/skel/
 	
 	mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
-        cp -fr .staging/graviteeio-full-${VERSION}/graviteeio-rest-api-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim
-	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-rest-api-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim/rest-api
+        cp -fr .staging/graviteeio-full-${VERSION}/graviteeio-apim-rest-api-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim
+	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-rest-api-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim/rest-api
 
 	mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
 	cp build/files/systemd/graviteeio-apim-rest-api.service ${TEMPLATE_DIR}/etc/systemd/system/
@@ -107,7 +107,7 @@ build_rest_api() {
                 --architecture ${ARCH} \
                 --url "${URL}" \
                 --description  "${DESC}: Management API" \
-                --config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-rest-api-${VERSION}/config \
+                --config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-rest-api-${VERSION}/config \
                 --verbose \
                 -n ${PKGNAME}-rest-api-3x
 }
