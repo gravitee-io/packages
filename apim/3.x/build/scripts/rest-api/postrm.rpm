@@ -51,21 +51,21 @@ case "$1" in
 esac
 
 if [ "$REMOVE_DIRS" = "true" ]; then
-    if [ -d /opt/graviteeio/apim/graviteeio-rest-api-%{version}/data ]; then
+    if [ -d /opt/graviteeio/apim/graviteeio-apim-rest-api-%{version}/data ]; then
         echo -n "Deleting data directory..."
-        rm -rf /opt/graviteeio/apim/graviteeio-rest-api-%{version}/data
+        rm -rf /opt/graviteeio/apim/graviteeio-apim-rest-api-%{version}/data
         echo " OK"
     fi
 
-    if [ -d /opt/graviteeio/apim/graviteeio-rest-api-%{version}/logs ]; then
+    if [ -d /opt/graviteeio/apim/graviteeio-apim-rest-api-%{version}/logs ]; then
         echo -n "Deleting logs directory..."
-        rm -rf /opt/graviteeio/apim/graviteeio-rest-api-%{version}/logs
+        rm -rf /opt/graviteeio/apim/graviteeio-apim-rest-api-%{version}/logs
         echo " OK"
     fi
 
-    if [ -d /opt/graviteeio/apim/graviteeio-rest-api-%{version}/plugins ]; then
+    if [ -d /opt/graviteeio/apim/graviteeio-apim-rest-api-%{version}/plugins ]; then
         echo -n "Deleting plugins directory..."
-        rm -rf /opt/graviteeio/apim/graviteeio-rest-api-%{version}/plugins
+        rm -rf /opt/graviteeio/apim/graviteeio-apim-rest-api-%{version}/plugins
         echo " OK"
     fi
 fi
