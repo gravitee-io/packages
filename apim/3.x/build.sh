@@ -106,31 +106,31 @@ build_rest_api() {
                 --maintainer "${MAINTAINER}" \
                 --architecture ${ARCH} \
                 --url "${URL}" \
-                --description  "${DESC}: REST APIs" \
+                --description  "${DESC}: Management API" \
                 --config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-rest-api-${VERSION}/config \
                 --verbose \
                 -n ${PKGNAME}-rest-api-3x
 }
 
-build_console_ui() {
+build_management_ui() {
 	rm -fr build/skel/
 
 	mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
         cp -fr .staging/graviteeio-full-${VERSION}/graviteeio-console-ui-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim
-	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-console-ui-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim/console-ui
+	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-console-ui-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim/management-ui
 
 	mkdir -p ${TEMPLATE_DIR}/etc/nginx/conf.d/
-	cp build/files/graviteeio-apim-console-ui.conf ${TEMPLATE_DIR}/etc/nginx/conf.d/
+	cp build/files/graviteeio-apim-management-ui.conf ${TEMPLATE_DIR}/etc/nginx/conf.d/
 
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
                 --rpm-user ${USER} \
                 --rpm-group ${USER} \
                 --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
                 --directories /opt/graviteeio \
-		--before-install build/scripts/console-ui/preinst.rpm \
-                --after-install build/scripts/console-ui/postinst.rpm \
-                --before-remove build/scripts/console-ui/prerm.rpm \
-                --after-remove build/scripts/console-ui/postrm.rpm \
+		--before-install build/scripts/management-ui/preinst.rpm \
+                --after-install build/scripts/management-ui/postinst.rpm \
+                --before-remove build/scripts/management-ui/prerm.rpm \
+                --after-remove build/scripts/management-ui/postrm.rpm \
                 --iteration ${RELEASE} \
                 -C ${TEMPLATE_DIR} \
                 -s dir -v ${VERSION}  \
@@ -139,11 +139,11 @@ build_console_ui() {
                 --maintainer "${MAINTAINER}" \
                 --architecture ${ARCH} \
                 --url "${URL}" \
-                --description  "${DESC}: Console UI" \
+                --description  "${DESC}: Management UI" \
                 --depends nginx \
 		--config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-console-ui-${VERSION}/constants.json \
                 --verbose \
-                -n ${PKGNAME}-console-ui-3x
+                -n ${PKGNAME}-management-ui-3x
 }
 
 build_portal_ui() {
@@ -199,7 +199,7 @@ build_full() {
                 --url "${URL}" \
                 --description  "${DESC}" \
                 --depends "${PKGNAME}-portal-ui-3x >= ${VERSION}" \
-                --depends "${PKGNAME}-console-ui-3x >= ${VERSION}" \
+                --depends "${PKGNAME}-management-ui-3x >= ${VERSION}" \
 		--depends "${PKGNAME}-rest-api-3x >= ${VERSION}" \
 		--depends "${PKGNAME}-gateway-3x >= ${VERSION}" \
                 --verbose \
@@ -211,7 +211,7 @@ build() {
 	download
 	build_api_gateway
 	build_rest_api
-	build_console_ui
+	build_management_ui
         build_portal_ui
 	build_full
 }

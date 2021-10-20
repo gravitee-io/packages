@@ -1,7 +1,0 @@
-#!/bin/sh
-
-ln -sf /opt/graviteeio/apim/graviteeio-apim-console-ui-%{version}/ /opt/graviteeio/apim/console-ui
-chown -R gravitee:gravitee /opt/graviteeio/apim/console-ui
-
-# Restart nginx process to take care of the new location
-systemctl restart nginx
