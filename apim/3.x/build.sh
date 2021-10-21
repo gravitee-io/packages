@@ -150,8 +150,8 @@ build_portal_ui() {
 	rm -fr build/skel/
 
 	mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
-        cp -fr .staging/graviteeio-full-${VERSION}/graviteeio-portal-ui-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim
-	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-portal-ui-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim/portal-ui
+        cp -fr .staging/graviteeio-full-${VERSION}/graviteeio-apim-portal-ui-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim
+	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-portal-ui-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim/portal-ui
 
 	mkdir -p ${TEMPLATE_DIR}/etc/nginx/conf.d/
 	cp build/files/graviteeio-apim-portal-ui.conf ${TEMPLATE_DIR}/etc/nginx/conf.d/
@@ -175,7 +175,7 @@ build_portal_ui() {
                 --url "${URL}" \
                 --description  "${DESC}: Portal UI" \
                 --depends nginx \
-		--config-files "${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-portal-ui-${VERSION}/assets/" \
+		--config-files "${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-portal-ui-${VERSION}/assets/" \
                 --verbose \
                 -n ${PKGNAME}-portal-ui-3x
 }
