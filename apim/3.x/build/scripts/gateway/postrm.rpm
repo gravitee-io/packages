@@ -51,15 +51,15 @@ case "$1" in
 esac
 
 if [ "$REMOVE_DIRS" = "true" ]; then
-    if [ -d /opt/graviteeio/apim/graviteeio-gateway-%{version}/logs ]; then
+    if [ -d /opt/graviteeio/apim/graviteeio-apim-gateway-%{version}/logs ]; then
         echo -n "Deleting logs directory..."
-        rm -rf /opt/graviteeio/apim/graviteeio-gateway-%{version}/logs
+        rm -rf /opt/graviteeio/apim/graviteeio-apim-gateway-%{version}/logs
         echo " OK"
     fi
 
-    if [ -d /opt/graviteeio/apim/graviteeio-gateway-%{version}/plugins ]; then
+    if [ -d /opt/graviteeio/apim/graviteeio-apim-gateway-%{version}/plugins ]; then
         echo -n "Deleting plugins directory..."
-        rm -rf /opt/graviteeio/apim/graviteeio-gateway-%{version}/plugins
+        rm -rf /opt/graviteeio/apim/graviteeio-apim-gateway-%{version}/plugins
         echo " OK"
     fi
 fi
