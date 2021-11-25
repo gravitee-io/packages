@@ -42,8 +42,8 @@ build_api_gateway() {
 	rm -fr build/skel/
 
 	mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
-	cp -fr .staging/graviteeio-full-${VERSION}/graviteeio-gateway-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim
-	ln -sf build/skel/el7/opt/graviteeio/apim/graviteeio-gateway-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim/gateway
+	cp -fr .staging/graviteeio-full-${VERSION}/graviteeio-apim-gateway-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim
+	ln -sf build/skel/el7/opt/graviteeio/apim/graviteeio-apim-gateway-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/apim/gateway
 
 	mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
         cp build/files/systemd/graviteeio-apim-gateway.service ${TEMPLATE_DIR}/etc/systemd/system/
@@ -70,7 +70,7 @@ build_api_gateway() {
   		--architecture ${ARCH} \
   		--url "${URL}" \
   		--description  "${DESC}: API Gateway" \
-  		--config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-gateway-${VERSION}/config \
+  		--config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-gateway-${VERSION}/config \
   		--verbose \
 		-n ${PKGNAME}-gateway-3x
 }
