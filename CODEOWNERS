@@ -1,3 +1,7 @@
 # Default
 
 *                                                            @gravitee-io/techops
+
+/apim/                                                       @gravitee-io/apim
+/am/                                                         @gravitee-io/am
+/ae/                                                         @gravitee-io/ae
