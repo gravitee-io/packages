@@ -10,6 +10,81 @@
 #       $1=1       : indicates a new install
 #       $1=2       : indicates an upgrade
 
+checkVersionUpgrade() {
+    echo "INFO: Some version mismatch issues have been identified in the previous version of this RPM package."
+    echo "INFO: To avoid any destructive changes if the upgrade is applied, some checks on the versions will be ran."
+
+    # Get installedVersion from /opt/graviteeio/am/graviteeio-am-gateway-xxxxxxxx
+    installedVersion=$(ls -d /opt/graviteeio/am/graviteeio-am-gateway-* | cut -d- -f4)
+    echo "Installed version: $installedVersion"
+
+    # Parse version based on format x.y.z
+    installedMajor=$(echo $installedVersion | cut -d. -f1)
+    installedMinor=$(echo $installedVersion | cut -d. -f2)
+    installedPatch=$(echo $installedVersion | cut -d. -f3)
+
+    newVersion=%{version}
+    echo "New version: $newVersion"
+
+    # Parse version based on format x.y.z
+    newVersionMajor=$(echo $newVersion | cut -d. -f1)
+    newVersionMinor=$(echo $newVersion | cut -d. -f2)
+    newVersionPatch=$(echo $newVersion | cut -d. -f3)
+
+    if [ "$installedMajor" -gt "$newVersionMajor" ] || \
+       [ "$installedMajor" -eq "$newVersionMajor" -a "$installedMinor" -gt "$newVersionMinor" ] || \
+       [ "$installedMajor" -eq "$newVersionMajor" -a "$installedMinor" -eq "$newVersionMinor" -a "$installedPatch" -gt "$newVersionPatch" ] ; then
+        echo "ERROR: You are trying to upgrade to a version ($newVersion) that is lower than the one you are currently running ($installedVersion)"
+        exit 1
+    fi
+}
+
+
+createGroupAndUserDebian() {
+    # Create gravitee group if not existing
+    if ! getent group gravitee > /dev/null 2>&1 ; then
+        echo -n "Creating gravitee group..."
+        addgroup --quiet --system gravitee
+        echo " OK"
+    fi
+
+    # Create gravitee user if not existing
+    if ! id gravitee > /dev/null 2>&1 ; then
+        echo -n "Creating gravitee user..."
+        adduser --quiet \
+                --system \
+                --no-create-home \
+                --home /nonexistent \
+                --ingroup gravitee \
+                --disabled-password \
+                --shell /bin/false \
+                gravitee
+        echo " OK"
+    fi
+}
+
+createGroupAndUserRedHat() {
+    # Create gravitee group if not existing
+    if ! getent group gravitee > /dev/null 2>&1 ; then
+        echo -n "Creating gravitee group..."
+        groupadd -r gravitee
+        echo " OK"
+    fi
+
+    # Create gravitee user if not existing
+    if ! id gravitee > /dev/null 2>&1 ; then
+        echo -n "Creating gravitee user..."
+        useradd --system \
+                --no-create-home \
+                --home-dir /nonexistent \
+                --gid gravitee \
+                --shell /sbin/nologin \
+                --comment "gravitee user" \
+                gravitee
+        echo " OK"
+    fi
+}
+
 err_exit() {
     echo "$@" >&2
     exit 1
@@ -18,54 +93,26 @@ err_exit() {
 case "$1" in
 
     # Debian ####################################################
-    install|upgrade)
-
-        # Create gravitee group if not existing
-        if ! getent group gravitee > /dev/null 2>&1 ; then
-            echo -n "Creating gravitee group..."
-            addgroup --quiet --system gravitee
-            echo " OK"
-        fi
-
-        # Create gravitee user if not existing
-        if ! id gravitee > /dev/null 2>&1 ; then
-            echo -n "Creating gravitee user..."
-            adduser --quiet \
-                    --system \
-                    --no-create-home \
-                    --home /nonexistent \
-                    --ingroup gravitee \
-                    --disabled-password \
-                    --shell /bin/false \
-                    gravitee
-            echo " OK"
-        fi
+    install)
+        createGroupAndUserDebian
     ;;
+
+    upgrade)
+        checkVersionUpgrade
+        createGroupAndUserDebian
+    ;;
+
     abort-deconfigure|abort-upgrade|abort-remove)
     ;;
 
     # RedHat ####################################################
-    1|2)
+    1)
+        createGroupAndUserRedHat
+    ;;
 
-        # Create gravitee group if not existing
-        if ! getent group gravitee > /dev/null 2>&1 ; then
-            echo -n "Creating gravitee group..."
-            groupadd -r gravitee
-            echo " OK"
-        fi
-
-        # Create gravitee user if not existing
-        if ! id gravitee > /dev/null 2>&1 ; then
-            echo -n "Creating gravitee user..."
-            useradd --system \
-                    --no-create-home \
-                    --home-dir /nonexistent \
-                    --gid gravitee \
-                    --shell /sbin/nologin \
-                    --comment "gravitee user" \
-                    gravitee
-            echo " OK"
-        fi
+    2)
+        checkVersionUpgrade
+        createGroupAndUserRedHat
     ;;
 
     *)
