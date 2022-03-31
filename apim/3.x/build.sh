@@ -52,27 +52,27 @@ build_api_gateway() {
         cp build/files/init.d/graviteeio-apim-gateway ${TEMPLATE_DIR}/etc/init.d
 
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
-		--rpm-user ${USER} \
-          	--rpm-group ${USER} \
-          	--rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
-                --rpm-attr "0755,root,root:/etc/init.d/graviteeio-apim-gateway" \
-          	--directories /opt/graviteeio \
-        	--before-install build/scripts/gateway/preinst.rpm \
-        	--after-install build/scripts/gateway/postinst.rpm \
-        	--before-remove build/scripts/gateway/prerm.rpm \
-        	--after-remove build/scripts/gateway/postrm.rpm \
-                --iteration ${RELEASE} \
-                -C ${TEMPLATE_DIR} \
-		-s dir -v ${VERSION}  \
-  		--license "${LICENSE}" \
-  		--vendor "${VENDOR}" \
-  		--maintainer "${MAINTAINER}" \
-  		--architecture ${ARCH} \
-  		--url "${URL}" \
-  		--description  "${DESC}: API Gateway" \
-  		--config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-gateway-${VERSION}/config \
-  		--verbose \
-		-n ${PKGNAME}-gateway-3x
+            --rpm-user ${USER} \
+            --rpm-group ${USER} \
+            --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
+            --rpm-attr "0755,root,root:/etc/init.d/graviteeio-apim-gateway" \
+            --directories /opt/graviteeio \
+            --before-install build/scripts/gateway/preinst.rpm \
+            --after-install build/scripts/gateway/postinst.rpm \
+            --before-remove build/scripts/gateway/prerm.rpm \
+            --after-remove build/scripts/gateway/postrm.rpm \
+            --iteration ${RELEASE} \
+            -C ${TEMPLATE_DIR} \
+            -s dir -v ${VERSION}  \
+            --license "${LICENSE}" \
+            --vendor "${VENDOR}" \
+            --maintainer "${MAINTAINER}" \
+            --architecture ${ARCH} \
+            --url "${URL}" \
+            --description  "${DESC}: API Gateway" \
+            --config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-gateway-${VERSION}/config \
+            --verbose \
+            -n ${PKGNAME}-gateway-3x
 }
 
 build_rest_api() {
@@ -85,31 +85,31 @@ build_rest_api() {
 	mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
 	cp build/files/systemd/graviteeio-apim-rest-api.service ${TEMPLATE_DIR}/etc/systemd/system/
 
-        mkdir -p ${TEMPLATE_DIR}/etc/init.d
-        cp build/files/init.d/graviteeio-apim-rest-api ${TEMPLATE_DIR}/etc/init.d
+  mkdir -p ${TEMPLATE_DIR}/etc/init.d
+  cp build/files/init.d/graviteeio-apim-rest-api ${TEMPLATE_DIR}/etc/init.d
 
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
-                --rpm-user ${USER} \
-                --rpm-group ${USER} \
-                --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
-                --rpm-attr "0755,root,root:/etc/init.d/graviteeio-apim-rest-api" \
-                --directories /opt/graviteeio \
-                --before-install build/scripts/rest-api/preinst.rpm \
-                --after-install build/scripts/rest-api/postinst.rpm \
-                --before-remove build/scripts/rest-api/prerm.rpm \
-                --after-remove build/scripts/rest-api/postrm.rpm \
-                --iteration ${RELEASE} \
-                -C ${TEMPLATE_DIR} \
-                -s dir -v ${VERSION}  \
-                --license "${LICENSE}" \
-                --vendor "${VENDOR}" \
-                --maintainer "${MAINTAINER}" \
-                --architecture ${ARCH} \
-                --url "${URL}" \
-                --description  "${DESC}: Management API" \
-                --config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-rest-api-${VERSION}/config \
-                --verbose \
-                -n ${PKGNAME}-rest-api-3x
+            --rpm-user ${USER} \
+            --rpm-group ${USER} \
+            --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
+            --rpm-attr "0755,root,root:/etc/init.d/graviteeio-apim-rest-api" \
+            --directories /opt/graviteeio \
+            --before-install build/scripts/rest-api/preinst.rpm \
+            --after-install build/scripts/rest-api/postinst.rpm \
+            --before-remove build/scripts/rest-api/prerm.rpm \
+            --after-remove build/scripts/rest-api/postrm.rpm \
+            --iteration ${RELEASE} \
+            -C ${TEMPLATE_DIR} \
+            -s dir -v ${VERSION}  \
+            --license "${LICENSE}" \
+            --vendor "${VENDOR}" \
+            --maintainer "${MAINTAINER}" \
+            --architecture ${ARCH} \
+            --url "${URL}" \
+            --description  "${DESC}: Management API" \
+            --config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-rest-api-${VERSION}/config \
+            --verbose \
+            -n ${PKGNAME}-rest-api-3x
 }
 
 build_management_ui() {
@@ -123,27 +123,27 @@ build_management_ui() {
 	cp build/files/graviteeio-apim-management-ui.conf ${TEMPLATE_DIR}/etc/nginx/conf.d/
 
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
-                --rpm-user ${USER} \
-                --rpm-group ${USER} \
-                --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
-                --directories /opt/graviteeio \
-		--before-install build/scripts/management-ui/preinst.rpm \
-                --after-install build/scripts/management-ui/postinst.rpm \
-                --before-remove build/scripts/management-ui/prerm.rpm \
-                --after-remove build/scripts/management-ui/postrm.rpm \
-                --iteration ${RELEASE} \
-                -C ${TEMPLATE_DIR} \
-                -s dir -v ${VERSION}  \
-                --license "${LICENSE}" \
-                --vendor "${VENDOR}" \
-                --maintainer "${MAINTAINER}" \
-                --architecture ${ARCH} \
-                --url "${URL}" \
-                --description  "${DESC}: Management UI" \
-                --depends nginx \
-		--config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-console-ui-${VERSION}/constants.json \
-                --verbose \
-                -n ${PKGNAME}-management-ui-3x
+            --rpm-user ${USER} \
+            --rpm-group ${USER} \
+            --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
+            --directories /opt/graviteeio \
+            --before-install build/scripts/management-ui/preinst.rpm \
+            --after-install build/scripts/management-ui/postinst.rpm \
+            --before-remove build/scripts/management-ui/prerm.rpm \
+            --after-remove build/scripts/management-ui/postrm.rpm \
+            --iteration ${RELEASE} \
+            -C ${TEMPLATE_DIR} \
+            -s dir -v ${VERSION}  \
+            --license "${LICENSE}" \
+            --vendor "${VENDOR}" \
+            --maintainer "${MAINTAINER}" \
+            --architecture ${ARCH} \
+            --url "${URL}" \
+            --description  "${DESC}: Management UI" \
+            --depends nginx \
+            --config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-console-ui-${VERSION}/constants.json \
+            --verbose \
+            -n ${PKGNAME}-management-ui-3x
 }
 
 build_portal_ui() {
@@ -161,7 +161,7 @@ build_portal_ui() {
                 --rpm-group ${USER} \
                 --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
                 --directories /opt/graviteeio \
-		--before-install build/scripts/portal-ui/preinst.rpm \
+                --before-install build/scripts/portal-ui/preinst.rpm \
                 --after-install build/scripts/portal-ui/postinst.rpm \
                 --before-remove build/scripts/portal-ui/prerm.rpm \
                 --after-remove build/scripts/portal-ui/postrm.rpm \
@@ -175,7 +175,7 @@ build_portal_ui() {
                 --url "${URL}" \
                 --description  "${DESC}: Portal UI" \
                 --depends nginx \
-		--config-files "${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-portal-ui-${VERSION}/assets/" \
+		            --config-files "${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-portal-ui-${VERSION}/assets/" \
                 --verbose \
                 -n ${PKGNAME}-portal-ui-3x
 }
@@ -186,24 +186,24 @@ build_full() {
         mkdir -p ${TEMPLATE_DIR}
 
 	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
-                --rpm-user ${USER} \
-                --rpm-group ${USER} \
-                --rpm-attr "0750,${USER},${USER}:/opt/graviteeio" \
-                --iteration ${RELEASE} \
-		-C ${TEMPLATE_DIR} \
-                -s dir -v ${VERSION}  \
-                --license "${LICENSE}" \
-                --vendor "${VENDOR}" \
-                --maintainer "${MAINTAINER}" \
-                --architecture ${ARCH} \
-                --url "${URL}" \
-                --description  "${DESC}" \
-                --depends "${PKGNAME}-portal-ui-3x >= ${VERSION}" \
-                --depends "${PKGNAME}-management-ui-3x >= ${VERSION}" \
-		--depends "${PKGNAME}-rest-api-3x >= ${VERSION}" \
-		--depends "${PKGNAME}-gateway-3x >= ${VERSION}" \
-                --verbose \
-                -n ${PKGNAME}-3x
+            --rpm-user ${USER} \
+            --rpm-group ${USER} \
+            --rpm-attr "0750,${USER},${USER}:/opt/graviteeio" \
+            --iteration ${RELEASE} \
+            -C ${TEMPLATE_DIR} \
+            -s dir -v ${VERSION}  \
+            --license "${LICENSE}" \
+            --vendor "${VENDOR}" \
+            --maintainer "${MAINTAINER}" \
+            --architecture ${ARCH} \
+            --url "${URL}" \
+            --description  "${DESC}" \
+            --depends "${PKGNAME}-portal-ui-3x = ${VERSION}" \
+            --depends "${PKGNAME}-management-ui-3x = ${VERSION}" \
+            --depends "${PKGNAME}-rest-api-3x = ${VERSION}" \
+            --depends "${PKGNAME}-gateway-3x = ${VERSION}" \
+            --verbose \
+            -n ${PKGNAME}-3x
 }
 
 build() {
@@ -212,7 +212,7 @@ build() {
 	build_api_gateway
 	build_rest_api
 	build_management_ui
-        build_portal_ui
+  build_portal_ui
 	build_full
 }
 
