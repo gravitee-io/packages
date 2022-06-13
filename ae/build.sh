@@ -70,8 +70,8 @@ build_alert_engine() {
   		--architecture ${ARCH} \
   		--url "${URL}" \
   		--description  "${DESC}: Alert Engine" \
-  		--config-files ${TEMPLATE_DIR}/opt/graviteeio/ae/graviteeio-ae-engine-${VERSION}/config \
-		--config-files ${TEMPLATE_DIR}/opt/graviteeio/ae/graviteeio-ae-engine-${VERSION}/license \
+  		--config-files /opt/graviteeio/ae/graviteeio-ae-engine-${VERSION}/config \
+		--config-files /opt/graviteeio/ae/graviteeio-ae-engine-${VERSION}/license \
   		--verbose \
 		-n ${PKGNAME}-engine
 }
