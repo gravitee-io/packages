@@ -70,7 +70,7 @@ build_api_gateway() {
             --architecture ${ARCH} \
             --url "${URL}" \
             --description  "${DESC}: API Gateway" \
-            --config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-gateway-${VERSION}/config \
+            --config-files /opt/graviteeio/apim/graviteeio-apim-gateway-${VERSION}/config \
             --verbose \
             -n ${PKGNAME}-gateway-3x
 }
@@ -107,7 +107,7 @@ build_rest_api() {
             --architecture ${ARCH} \
             --url "${URL}" \
             --description  "${DESC}: Management API" \
-            --config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-rest-api-${VERSION}/config \
+            --config-files /opt/graviteeio/apim/graviteeio-apim-rest-api-${VERSION}/config \
             --verbose \
             -n ${PKGNAME}-rest-api-3x
 }
@@ -141,7 +141,7 @@ build_management_ui() {
             --url "${URL}" \
             --description  "${DESC}: Management UI" \
             --depends nginx \
-            --config-files ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-console-ui-${VERSION}/constants.json \
+            --config-files /opt/graviteeio/apim/graviteeio-apim-console-ui-${VERSION}/constants.json \
             --verbose \
             -n ${PKGNAME}-management-ui-3x
 }

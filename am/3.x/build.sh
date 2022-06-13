@@ -70,7 +70,7 @@ build_access_gateway() {
             --architecture ${ARCH} \
             --url "${URL}" \
             --description  "${DESC}: Access Gateway" \
-            --config-files ${TEMPLATE_DIR}/opt/graviteeio/am/graviteeio-am-gateway-${VERSION}/config \
+            --config-files /opt/graviteeio/am/graviteeio-am-gateway-${VERSION}/config \
             --verbose \
             -n ${PKGNAME}-gateway-3x
 }
@@ -107,7 +107,7 @@ build_management_api() {
             --architecture ${ARCH} \
             --url "${URL}" \
             --description  "${DESC}: Management API" \
-            --config-files ${TEMPLATE_DIR}/opt/graviteeio/am/graviteeio-am-management-api-${VERSION}/config \
+            --config-files /opt/graviteeio/am/graviteeio-am-management-api-${VERSION}/config \
             --verbose \
             -n ${PKGNAME}-management-api-3x
 }
@@ -141,7 +141,7 @@ build_management_ui() {
             --url "${URL}" \
             --description  "${DESC}: Management UI" \
             --depends nginx \
-            --config-files ${TEMPLATE_DIR}/opt/graviteeio/am/graviteeio-am-management-ui-${VERSION}/constants.json \
+            --config-files /opt/graviteeio/am/graviteeio-am-management-ui-${VERSION}/constants.json \
             --verbose \
             -n ${PKGNAME}-management-ui-3x
 }
