@@ -23,14 +23,31 @@ export PATH_TO_LOCAL_RPMS=$(pwd)
 docker run --rm -v ${PATH_TO_LOCAL_RPMS}:/local-rpms -it --entrypoint bash centos
 ```
 
+### Determine the tag to use
+
+For a final release, the TAG of your RPM package should look like:
+```shell
+TAG=[YOUR_VERSION]-1
+...
+# example for a 3.20.0 version
+TAG= 3.20.0-1
+```
+
+For a pre-release (aka alpha version), the TAG of your RPM package should look like:
+```shell
+TAG=[YOUR_VERSION]-0.x.alpha
+...
+# example for a 3.20.0-alpha.2 version
+TAG= 3.20.0-0.2.alpha
+```
 ### Install local RPMs
 
 Inside the container:
 ```shell
-yum install /local-rpms/graviteeio-apim-gateway-3x-[YOUR_VERSION]-0.noarch.rpm
-yum install /local-rpms/graviteeio-apim-management-ui-3x-[YOUR_VERSION]-0.noarch.rpm
-yum install /local-rpms/graviteeio-apim-portal-ui-3x-[YOUR_VERSION]-0.noarch.rpm
-yum install /local-rpms/graviteeio-apim-rest-api-3x-[YOUR_VERSION]-0.noarch.rpm
+yum install /local-rpms/graviteeio-apim-gateway-3x-[TAG].noarch.rpm
+yum install /local-rpms/graviteeio-apim-management-ui-3x-[TAG].noarch.rpm
+yum install /local-rpms/graviteeio-apim-portal-ui-3x-[TAG].noarch.rpm
+yum install /local-rpms/graviteeio-apim-rest-api-3x-[TAG].noarch.rpm
 ```
 
 
@@ -58,5 +75,5 @@ yum update -y
 yum -q makecache -y --disablerepo='*' --enablerepo='graviteeio'
 
 # Install RPMs
-yum install graviteeio-apim-3x-[YOUR_VERSION]-0.noarch -y
+yum install graviteeio-apim-3x-[TAG].noarch -y
 ```
