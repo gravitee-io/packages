@@ -1,1 +1,22 @@
+!.gitignore
+
+# IntelliJ
+.idea/
+*.iml
+
+# eclipse
+.settings/
+.project
+.classpath
+/bin/
+
+# Project
 **/.staging
+**/build/skel/
+
+*.rpm
+*.deb
+*.tar.gz
+
+# Others
+.DS_Store
