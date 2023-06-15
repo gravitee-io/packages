@@ -11,11 +11,11 @@ _Here is an example to build and test APIM RPMs locally:_
 Build the RPMs using `build.sh`:
 
 ```shell
-cd apim/3.x
+cd apim/4.x
 ./build.sh -v [YOUR_VERSION]
 ```
 
-### Run CentOS docket image
+### Run CentOS docker image
 
 Run CentOS docker container with a volume mount:
 ```shell
@@ -29,25 +29,25 @@ For a final release, the TAG of your RPM package should look like:
 ```shell
 TAG=[YOUR_VERSION]-1
 ...
-# example for a 3.20.0 version
-TAG= 3.20.0-1
+# example for a 4.0.0 version
+TAG= 4.0.0-1
 ```
 
 For a pre-release (aka alpha version), the TAG of your RPM package should look like:
 ```shell
 TAG=[YOUR_VERSION]-0.x.alpha
 ...
-# example for a 3.20.0-alpha.2 version
-TAG= 3.20.0-0.2.alpha
+# example for a 4.0.0-alpha.2 version
+TAG= 4.0.0-0.2.alpha
 ```
 ### Install local RPMs
 
 Inside the container:
 ```shell
-yum install /local-rpms/graviteeio-apim-gateway-3x-[TAG].noarch.rpm
-yum install /local-rpms/graviteeio-apim-management-ui-3x-[TAG].noarch.rpm
-yum install /local-rpms/graviteeio-apim-portal-ui-3x-[TAG].noarch.rpm
-yum install /local-rpms/graviteeio-apim-rest-api-3x-[TAG].noarch.rpm
+yum install /local-rpms/graviteeio-apim-gateway-4x-[TAG].noarch.rpm
+yum install /local-rpms/graviteeio-apim-management-ui-4x-[TAG].noarch.rpm
+yum install /local-rpms/graviteeio-apim-portal-ui-4x-[TAG].noarch.rpm
+yum install /local-rpms/graviteeio-apim-rest-api-4x-[TAG].noarch.rpm
 ```
 
 
@@ -75,5 +75,5 @@ yum update -y
 yum -q makecache -y --disablerepo='*' --enablerepo='graviteeio'
 
 # Install RPMs
-yum install graviteeio-apim-3x-[TAG].noarch -y
+yum install graviteeio-apim-4x-[TAG].noarch -y
 ```
