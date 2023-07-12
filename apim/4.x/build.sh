@@ -20,249 +20,252 @@ declare DESC="Gravitee.io API Management 4.x"
 declare MAINTAINER="David BRASSELY <david.brassely@graviteesource.com>"
 declare DOCKER_WDIR="/tmp/fpm"
 declare DOCKER_FPM="graviteeio/fpm"
-declare TEMPLATE_DIR="";
+declare TEMPLATE_DIR=""
 
 parse_version() {
-    declare GRAVITEEIO_QUALIFIER=""
+  declare GRAVITEEIO_QUALIFIER=""
 
-    # parse version to determine if it is a pre release or not
-    # More information about the versioning here:
-    #  - https://fedoraproject.org/wiki/Package_Versioning_Examples
-    #  - https://docs.fedoraproject.org/en-US/packaging-guidelines/Versioning/#_prerelease_versions
+  # parse version to determine if it is a pre release or not
+  # More information about the versioning here:
+  #  - https://fedoraproject.org/wiki/Package_Versioning_Examples
+  #  - https://docs.fedoraproject.org/en-US/packaging-guidelines/Versioning/#_prerelease_versions
 
-    VERSION=$(echo "$VERSION_WITH_QUALIFIER" | awk -F '-' '{print $1}')    # 4.0.0
+  VERSION=$(echo "$VERSION_WITH_QUALIFIER" | awk -F '-' '{print $1}') # 4.0.0
 
-    GRAVITEEIO_QUALIFIER=$(echo "$VERSION_WITH_QUALIFIER" | awk -F '-' '{print $2}')  # alpha.1 or empty
-    if [ -n "$GRAVITEEIO_QUALIFIER" ]; then
-      declare GRAVITEEIO_QUALIFIER_NAME=""
-      declare GRAVITEEIO_QUALIFIER_VERSION=""
+  GRAVITEEIO_QUALIFIER=$(echo "$VERSION_WITH_QUALIFIER" | awk -F '-' '{print $2}') # alpha.1 or empty
+  if [ -n "$GRAVITEEIO_QUALIFIER" ]; then
+    declare GRAVITEEIO_QUALIFIER_NAME=""
+    declare GRAVITEEIO_QUALIFIER_VERSION=""
 
-      GRAVITEEIO_QUALIFIER_NAME=$(echo "$GRAVITEEIO_QUALIFIER" | awk -F '.' '{print $1}')          # alpha or empty
-      GRAVITEEIO_QUALIFIER_VERSION=$(echo "$GRAVITEEIO_QUALIFIER" | awk -F '.' '{print $2}')       # 1  or empty
+    GRAVITEEIO_QUALIFIER_NAME=$(echo "$GRAVITEEIO_QUALIFIER" | awk -F '.' '{print $1}')    # alpha or empty
+    GRAVITEEIO_QUALIFIER_VERSION=$(echo "$GRAVITEEIO_QUALIFIER" | awk -F '.' '{print $2}') # 1  or empty
 
-      # If there is a qualifier, it means that the version is a pre-release. So according to the documentation, release must be a number < 1 and of the form "0.x"
-      RELEASE="0.$GRAVITEEIO_QUALIFIER_VERSION.$GRAVITEEIO_QUALIFIER_NAME"
-    else
-      # If there is no qualifier, it means that the version is a final release. So according to the documentation, release must be a number >= 1
-      RELEASE="1"
-    fi
+    # If there is a qualifier, it means that the version is a pre-release. So according to the documentation, release must be a number < 1 and of the form "0.x"
+    RELEASE="0.$GRAVITEEIO_QUALIFIER_VERSION.$GRAVITEEIO_QUALIFIER_NAME"
+  else
+    # If there is no qualifier, it means that the version is a final release. So according to the documentation, release must be a number >= 1
+    RELEASE="1"
+  fi
 }
 
-
 clean() {
-	rm -rf build/skel/*
-	rm -f *.deb
-	rm -f *.rpm
-	rm -f *.tar.gz
+  rm -rf build/skel/*
+  rm -f *.deb
+  rm -f *.rpm
+  rm -f *.tar.gz
 }
 
 # Download bundle
 download() {
-	local filename="graviteeio-full-${VERSION_WITH_QUALIFIER}.zip"
-	local path="graviteeio-apim/distributions/"
+  local filename="graviteeio-full-${VERSION_WITH_QUALIFIER}.zip"
+  local path="graviteeio-apim/distributions/"
   # If GRAVITEEIO_QUALIFIER_NAME is not empty then we need to download the bundle from the pre-releases folder
   if [ -z "$GRAVITEEIO_QUALIFIER_NAME" ]; then
     path="pre-releases/graviteeio-apim/distributions/"
   fi
-	rm -fr .staging
-	mkdir .staging
-	wget --progress=bar:force -P .staging https://download.gravitee.io/${path}${filename}
-	wget -nv -P .staging "https://download.gravitee.io/${path}${filename}.sha1"
-	cd .staging ; sha1sum -c ${filename}.sha1 ; unzip ${filename} ; rm ${filename} ; rm ${filename}.sha1 ; cd ..
+  rm -fr .staging
+  mkdir .staging
+  wget --progress=bar:force -P .staging https://download.gravitee.io/${path}${filename}
+  wget -nv -P .staging "https://download.gravitee.io/${path}${filename}.sha1"
+  cd .staging
+  sha1sum -c ${filename}.sha1
+  unzip ${filename}
+  rm ${filename}
+  rm ${filename}.sha1
+  cd ..
 }
 
 # Prepare API Gateway packaging
 build_api_gateway() {
-	rm -fr build/skel/
+  rm -fr build/skel/
 
-	mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
-	cp -fr .staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-apim-gateway-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim
-	ln -sf build/skel/el7/opt/graviteeio/apim/graviteeio-apim-gateway-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim/gateway
+  mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
+  cp -fr .staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-apim-gateway-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim
+  ln -sf build/skel/el7/opt/graviteeio/apim/graviteeio-apim-gateway-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim/gateway
 
-	mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
-        cp build/files/systemd/graviteeio-apim-gateway.service ${TEMPLATE_DIR}/etc/systemd/system/
+  mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
+  cp build/files/systemd/graviteeio-apim-gateway.service ${TEMPLATE_DIR}/etc/systemd/system/
 
-        mkdir -p ${TEMPLATE_DIR}/etc/init.d
-        cp build/files/init.d/graviteeio-apim-gateway ${TEMPLATE_DIR}/etc/init.d
+  mkdir -p ${TEMPLATE_DIR}/etc/init.d
+  cp build/files/init.d/graviteeio-apim-gateway ${TEMPLATE_DIR}/etc/init.d
 
-	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
-            --rpm-user ${USER} \
-            --rpm-group ${USER} \
-            --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
-            --rpm-attr "0755,root,root:/etc/init.d/graviteeio-apim-gateway" \
-            --directories /opt/graviteeio \
-            --before-install build/scripts/gateway/preinst.rpm \
-            --after-install build/scripts/gateway/postinst.rpm \
-            --before-remove build/scripts/gateway/prerm.rpm \
-            --after-remove build/scripts/gateway/postrm.rpm \
-            --iteration ${RELEASE} \
-            -C ${TEMPLATE_DIR} \
-            -s dir -v ${VERSION}  \
-            --license "${LICENSE}" \
-            --vendor "${VENDOR}" \
-            --maintainer "${MAINTAINER}" \
-            --architecture ${ARCH} \
-            --url "${URL}" \
-            --description  "${DESC}: API Gateway" \
-            --config-files /opt/graviteeio/apim/graviteeio-apim-gateway-${VERSION_WITH_QUALIFIER}/config \
-            --verbose \
-            -n ${PKGNAME}-gateway-4x
+  docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
+    --rpm-user ${USER} \
+    --rpm-group ${USER} \
+    --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
+    --rpm-attr "0755,root,root:/etc/init.d/graviteeio-apim-gateway" \
+    --directories /opt/graviteeio \
+    --before-install build/scripts/gateway/preinst.rpm \
+    --after-install build/scripts/gateway/postinst.rpm \
+    --before-remove build/scripts/gateway/prerm.rpm \
+    --after-remove build/scripts/gateway/postrm.rpm \
+    --iteration ${RELEASE} \
+    -C ${TEMPLATE_DIR} \
+    -s dir -v ${VERSION} \
+    --license "${LICENSE}" \
+    --vendor "${VENDOR}" \
+    --maintainer "${MAINTAINER}" \
+    --architecture ${ARCH} \
+    --url "${URL}" \
+    --description "${DESC}: API Gateway" \
+    --config-files /opt/graviteeio/apim/graviteeio-apim-gateway-${VERSION_WITH_QUALIFIER}/config \
+    --verbose \
+    -n ${PKGNAME}-gateway-4x
 }
 
 build_rest_api() {
-	rm -fr build/skel/
-	
-	mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
-        cp -fr .staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-apim-rest-api-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim
-	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-rest-api-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim/rest-api
+  rm -fr build/skel/
 
-	mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
-	cp build/files/systemd/graviteeio-apim-rest-api.service ${TEMPLATE_DIR}/etc/systemd/system/
+  mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
+  cp -fr .staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-apim-rest-api-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim
+  ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-rest-api-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim/rest-api
+
+  mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
+  cp build/files/systemd/graviteeio-apim-rest-api.service ${TEMPLATE_DIR}/etc/systemd/system/
 
   mkdir -p ${TEMPLATE_DIR}/etc/init.d
   cp build/files/init.d/graviteeio-apim-rest-api ${TEMPLATE_DIR}/etc/init.d
 
-	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
-            --rpm-user ${USER} \
-            --rpm-group ${USER} \
-            --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
-            --rpm-attr "0755,root,root:/etc/init.d/graviteeio-apim-rest-api" \
-            --directories /opt/graviteeio \
-            --before-install build/scripts/rest-api/preinst.rpm \
-            --after-install build/scripts/rest-api/postinst.rpm \
-            --before-remove build/scripts/rest-api/prerm.rpm \
-            --after-remove build/scripts/rest-api/postrm.rpm \
-            --iteration ${RELEASE} \
-            -C ${TEMPLATE_DIR} \
-            -s dir -v ${VERSION}  \
-            --license "${LICENSE}" \
-            --vendor "${VENDOR}" \
-            --maintainer "${MAINTAINER}" \
-            --architecture ${ARCH} \
-            --url "${URL}" \
-            --description  "${DESC}: Management API" \
-            --config-files /opt/graviteeio/apim/graviteeio-apim-rest-api-${VERSION_WITH_QUALIFIER}/config \
-            --verbose \
-            -n ${PKGNAME}-rest-api-4x
+  docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
+    --rpm-user ${USER} \
+    --rpm-group ${USER} \
+    --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
+    --rpm-attr "0755,root,root:/etc/init.d/graviteeio-apim-rest-api" \
+    --directories /opt/graviteeio \
+    --before-install build/scripts/rest-api/preinst.rpm \
+    --after-install build/scripts/rest-api/postinst.rpm \
+    --before-remove build/scripts/rest-api/prerm.rpm \
+    --after-remove build/scripts/rest-api/postrm.rpm \
+    --iteration ${RELEASE} \
+    -C ${TEMPLATE_DIR} \
+    -s dir -v ${VERSION} \
+    --license "${LICENSE}" \
+    --vendor "${VENDOR}" \
+    --maintainer "${MAINTAINER}" \
+    --architecture ${ARCH} \
+    --url "${URL}" \
+    --description "${DESC}: Management API" \
+    --config-files /opt/graviteeio/apim/graviteeio-apim-rest-api-${VERSION_WITH_QUALIFIER}/config \
+    --verbose \
+    -n ${PKGNAME}-rest-api-4x
 }
 
 build_management_ui() {
-	rm -fr build/skel/
+  rm -fr build/skel/
 
-	mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
-        cp -fr .staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-apim-console-ui-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim
-	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-console-ui-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim/management-ui
+  mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
+  cp -fr .staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-apim-console-ui-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim
+  ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-console-ui-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim/management-ui
 
-	mkdir -p ${TEMPLATE_DIR}/etc/nginx/conf.d/
-	cp build/files/graviteeio-apim-management-ui.conf ${TEMPLATE_DIR}/etc/nginx/conf.d/
+  mkdir -p ${TEMPLATE_DIR}/etc/nginx/conf.d/
+  cp build/files/graviteeio-apim-management-ui.conf ${TEMPLATE_DIR}/etc/nginx/conf.d/
 
-	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
-            --rpm-user ${USER} \
-            --rpm-group ${USER} \
-            --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
-            --directories /opt/graviteeio \
-            --before-install build/scripts/management-ui/preinst.rpm \
-            --after-install build/scripts/management-ui/postinst.rpm \
-            --before-remove build/scripts/management-ui/prerm.rpm \
-            --after-remove build/scripts/management-ui/postrm.rpm \
-            --iteration ${RELEASE} \
-            -C ${TEMPLATE_DIR} \
-            -s dir -v ${VERSION}  \
-            --license "${LICENSE}" \
-            --vendor "${VENDOR}" \
-            --maintainer "${MAINTAINER}" \
-            --architecture ${ARCH} \
-            --url "${URL}" \
-            --description  "${DESC}: Management UI" \
-            --depends nginx \
-            --config-files /opt/graviteeio/apim/graviteeio-apim-console-ui-${VERSION_WITH_QUALIFIER}/constants.json \
-            --verbose \
-            -n ${PKGNAME}-management-ui-4x
+  docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
+    --rpm-user ${USER} \
+    --rpm-group ${USER} \
+    --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
+    --directories /opt/graviteeio \
+    --before-install build/scripts/management-ui/preinst.rpm \
+    --after-install build/scripts/management-ui/postinst.rpm \
+    --before-remove build/scripts/management-ui/prerm.rpm \
+    --after-remove build/scripts/management-ui/postrm.rpm \
+    --iteration ${RELEASE} \
+    -C ${TEMPLATE_DIR} \
+    -s dir -v ${VERSION} \
+    --license "${LICENSE}" \
+    --vendor "${VENDOR}" \
+    --maintainer "${MAINTAINER}" \
+    --architecture ${ARCH} \
+    --url "${URL}" \
+    --description "${DESC}: Management UI" \
+    --depends nginx \
+    --config-files /opt/graviteeio/apim/graviteeio-apim-console-ui-${VERSION_WITH_QUALIFIER}/constants.json \
+    --verbose \
+    -n ${PKGNAME}-management-ui-4x
 }
 
 build_portal_ui() {
-	rm -fr build/skel/
+  rm -fr build/skel/
 
-	mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
-        cp -fr .staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-apim-portal-ui-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim
-	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-portal-ui-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim/portal-ui
+  mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
+  cp -fr .staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-apim-portal-ui-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim
+  ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-portal-ui-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim/portal-ui
 
-	mkdir -p ${TEMPLATE_DIR}/etc/nginx/conf.d/
-	cp build/files/graviteeio-apim-portal-ui.conf ${TEMPLATE_DIR}/etc/nginx/conf.d/
+  mkdir -p ${TEMPLATE_DIR}/etc/nginx/conf.d/
+  cp build/files/graviteeio-apim-portal-ui.conf ${TEMPLATE_DIR}/etc/nginx/conf.d/
 
-	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
-                --rpm-user ${USER} \
-                --rpm-group ${USER} \
-                --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
-                --directories /opt/graviteeio \
-                --before-install build/scripts/portal-ui/preinst.rpm \
-                --after-install build/scripts/portal-ui/postinst.rpm \
-                --before-remove build/scripts/portal-ui/prerm.rpm \
-                --after-remove build/scripts/portal-ui/postrm.rpm \
-                --iteration ${RELEASE} \
-                -C ${TEMPLATE_DIR} \
-                -s dir -v ${VERSION}  \
-                --license "${LICENSE}" \
-                --vendor "${VENDOR}" \
-                --maintainer "${MAINTAINER}" \
-                --architecture ${ARCH} \
-                --url "${URL}" \
-                --description  "${DESC}: Portal UI" \
-                --depends nginx \
-		            --config-files "${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-portal-ui-${VERSION_WITH_QUALIFIER}/assets/" \
-                --verbose \
-                -n ${PKGNAME}-portal-ui-4x
+  docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
+    --rpm-user ${USER} \
+    --rpm-group ${USER} \
+    --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
+    --directories /opt/graviteeio \
+    --before-install build/scripts/portal-ui/preinst.rpm \
+    --after-install build/scripts/portal-ui/postinst.rpm \
+    --before-remove build/scripts/portal-ui/prerm.rpm \
+    --after-remove build/scripts/portal-ui/postrm.rpm \
+    --iteration ${RELEASE} \
+    -C ${TEMPLATE_DIR} \
+    -s dir -v ${VERSION} \
+    --license "${LICENSE}" \
+    --vendor "${VENDOR}" \
+    --maintainer "${MAINTAINER}" \
+    --architecture ${ARCH} \
+    --url "${URL}" \
+    --description "${DESC}: Portal UI" \
+    --depends nginx \
+    --config-files "${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-portal-ui-${VERSION_WITH_QUALIFIER}/assets/" \
+    --verbose \
+    -n ${PKGNAME}-portal-ui-4x
 }
 
 build_full() {
-	# Dirty hack to avoid issues with FPM
-	rm -fr build/skel/
-        mkdir -p ${TEMPLATE_DIR}
+  # Dirty hack to avoid issues with FPM
+  rm -fr build/skel/
+  mkdir -p ${TEMPLATE_DIR}
 
-	docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
-            --rpm-user ${USER} \
-            --rpm-group ${USER} \
-            --rpm-attr "0750,${USER},${USER}:/opt/graviteeio" \
-            --iteration ${RELEASE} \
-            -C ${TEMPLATE_DIR} \
-            -s dir -v ${VERSION}  \
-            --license "${LICENSE}" \
-            --vendor "${VENDOR}" \
-            --maintainer "${MAINTAINER}" \
-            --architecture ${ARCH} \
-            --url "${URL}" \
-            --description  "${DESC}" \
-            --depends "${PKGNAME}-portal-ui-4x = ${VERSION}" \
-            --depends "${PKGNAME}-management-ui-4x = ${VERSION}" \
-            --depends "${PKGNAME}-rest-api-4x = ${VERSION}" \
-            --depends "${PKGNAME}-gateway-4x = ${VERSION}" \
-            --verbose \
-            -n ${PKGNAME}-4x
+  docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
+    --rpm-user ${USER} \
+    --rpm-group ${USER} \
+    --rpm-attr "0750,${USER},${USER}:/opt/graviteeio" \
+    --iteration ${RELEASE} \
+    -C ${TEMPLATE_DIR} \
+    -s dir -v ${VERSION} \
+    --license "${LICENSE}" \
+    --vendor "${VENDOR}" \
+    --maintainer "${MAINTAINER}" \
+    --architecture ${ARCH} \
+    --url "${URL}" \
+    --description "${DESC}" \
+    --depends "${PKGNAME}-portal-ui-4x = ${VERSION}" \
+    --depends "${PKGNAME}-management-ui-4x = ${VERSION}" \
+    --depends "${PKGNAME}-rest-api-4x = ${VERSION}" \
+    --depends "${PKGNAME}-gateway-4x = ${VERSION}" \
+    --verbose \
+    -n ${PKGNAME}-4x
 }
 
 build() {
-	clean
-	parse_version
-	download
-	build_api_gateway
-	build_rest_api
-	build_management_ui
-	build_portal_ui
-	build_full
+  clean
+  parse_version
+  download
+  build_api_gateway
+  build_rest_api
+  build_management_ui
+  build_portal_ui
+  build_full
 }
 
 ##################################################
 # Startup
 ##################################################
 
-while getopts ':v:l:' o
-do
-    case $o in
-    v) VERSION_WITH_QUALIFIER=$OPTARG ;;
-    h|*) usage ;;
-    esac
+while getopts ':v:l:' o; do
+  case $o in
+  v) VERSION_WITH_QUALIFIER=$OPTARG ;;
+  h | *) usage ;;
+  esac
 done
-shift $((OPTIND-1))
+shift $((OPTIND - 1))
 
 TEMPLATE_DIR=build/skel/el
 
