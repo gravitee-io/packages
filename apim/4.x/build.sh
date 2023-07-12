@@ -7,7 +7,6 @@ set -o errexit
 set -o nounset
 
 declare VERSION_WITH_QUALIFIER=""
-declare GRAVITEEIO_QUALIFIER_NAME=""
 declare VERSION=""
 declare RELEASE="1"
 declare PKGNAME="graviteeio-apim"
@@ -59,8 +58,8 @@ clean() {
 download() {
   local filename="graviteeio-full-${VERSION_WITH_QUALIFIER}.zip"
   local path="graviteeio-apim/distributions/"
-  # If GRAVITEEIO_QUALIFIER_NAME is not empty then we need to download the bundle from the pre-releases folder
-  if [ -z "$GRAVITEEIO_QUALIFIER_NAME" ]; then
+  # If $RELEASE is no equal to 1 then we need to download the bundle from the pre-releases folder
+  if [ "$RELEASE" != "1" ]; then
     path="pre-releases/graviteeio-apim/distributions/"
   fi
   rm -fr .staging
