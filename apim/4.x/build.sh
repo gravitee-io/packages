@@ -7,6 +7,7 @@ set -o errexit
 set -o nounset
 
 declare VERSION_WITH_QUALIFIER=""
+declare GRAVITEEIO_QUALIFIER_NAME=""
 declare VERSION=""
 declare RELEASE="1"
 declare PKGNAME="graviteeio-apim"
@@ -58,10 +59,15 @@ clean() {
 # Download bundle
 download() {
 	local filename="graviteeio-full-${VERSION_WITH_QUALIFIER}.zip"
+	local path="graviteeio-apim/distributions/"
+  # If GRAVITEEIO_QUALIFIER_NAME is not empty then we need to download the bundle from the pre-releases folder
+  if [ -z "$GRAVITEEIO_QUALIFIER_NAME" ]; then
+    path="pre-releases/graviteeio-apim/distributions/"
+  fi
 	rm -fr .staging
 	mkdir .staging
-	wget --progress=bar:force -P .staging https://download.gravitee.io/graviteeio-apim/distributions/${filename}
-	wget -nv -P .staging "https://download.gravitee.io/graviteeio-apim/distributions/${filename}.sha1"
+	wget --progress=bar:force -P .staging https://download.gravitee.io/${path}${filename}
+	wget -nv -P .staging "https://download.gravitee.io/${path}${filename}.sha1"
 	cd .staging ; sha1sum -c ${filename}.sha1 ; unzip ${filename} ; rm ${filename} ; rm ${filename}.sha1 ; cd ..
 }
 
