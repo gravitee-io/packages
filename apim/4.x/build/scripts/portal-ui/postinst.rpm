@@ -1,8 +1,6 @@
 #!/bin/sh
 
-## Warning for version with qualifier, `tail -1` works until version .9
-installedVersion=$(ls -d /opt/graviteeio/apim/graviteeio-apim-portal-ui-* | cut -d- -f5,6 | tail -1)
-ln -sf /opt/graviteeio/apim/graviteeio-apim-portal-ui-"${installedVersion}"/ /opt/graviteeio/apim/portal-ui
+ln -sf /opt/graviteeio/apim/graviteeio-apim-portal-ui /opt/graviteeio/apim/portal-ui
 chown -R gravitee:gravitee /opt/graviteeio/apim/portal-ui
 
 # Restart nginx process to take care of the new location

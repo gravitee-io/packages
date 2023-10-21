@@ -1,6 +1,4 @@
 #!/bin/sh
 
-## Warning for version with qualifier, `tail -1` works until version .9
-installedVersion=$(ls -d /opt/graviteeio/apim/graviteeio-apim-gateway-* | cut -d- -f4,5 | tail -1)
-ln -sf /opt/graviteeio/apim/graviteeio-apim-gateway-"${installedVersion}"/ /opt/graviteeio/apim/gateway
+ln -sf /opt/graviteeio/apim/graviteeio-apim-gateway/ /opt/graviteeio/apim/gateway
 chown -R gravitee:gravitee /opt/graviteeio/apim/gateway

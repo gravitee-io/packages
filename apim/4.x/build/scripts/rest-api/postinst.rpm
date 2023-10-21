@@ -1,6 +1,4 @@
 #!/bin/sh
 
-## Warning for version with qualifier, `tail -1` works until version .9
-installedVersion=$(ls -d /opt/graviteeio/apim/graviteeio-apim-rest-api-* | cut -d- -f5,6 | tail -1)
-ln -sf /opt/graviteeio/apim/graviteeio-apim-rest-api-"${installedVersion}"/ /opt/graviteeio/apim/rest-api
+ln -sf /opt/graviteeio/apim/graviteeio-apim-rest-api /opt/graviteeio/apim/rest-api
 chown -R gravitee:gravitee /opt/graviteeio/apim/rest-api

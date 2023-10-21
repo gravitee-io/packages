@@ -1,4 +1,4 @@
 #!/bin/sh
 
-ln -sf /opt/graviteeio/apim/graviteeio-apim-rest-api-%{version}/ /opt/graviteeio/apim/rest-api
+ln -sf /opt/graviteeio/apim/graviteeio-apim-rest-api/ /opt/graviteeio/apim/rest-api
 chown -R gravitee:gravitee /opt/graviteeio/apim/rest-api

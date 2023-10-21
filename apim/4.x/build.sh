@@ -68,7 +68,7 @@ download() {
   wget -nv -P .staging "https://download.gravitee.io/${path}${filename}.sha1"
   cd .staging
   sha1sum -c ${filename}.sha1
-  unzip ${filename}
+  unzip -q ${filename}
   rm ${filename}
   rm ${filename}.sha1
   cd ..
@@ -79,9 +79,8 @@ build_api_gateway() {
   rm -fr build/skel/
 
   mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
-  cp -fr .staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-apim-gateway-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim
-  ln -sf build/skel/el7/opt/graviteeio/apim/graviteeio-apim-gateway-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim/gateway
-
+  cp -fr .staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-apim-gateway-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-gateway
+  ln -sf build/skel/el7/opt/graviteeio/apim/graviteeio-apim-gateway ${TEMPLATE_DIR}/opt/graviteeio/apim/gateway
   mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
   cp build/files/systemd/graviteeio-apim-gateway.service ${TEMPLATE_DIR}/etc/systemd/system/
 
@@ -107,7 +106,7 @@ build_api_gateway() {
     --architecture ${ARCH} \
     --url "${URL}" \
     --description "${DESC}: API Gateway" \
-    --config-files /opt/graviteeio/apim/graviteeio-apim-gateway-${VERSION_WITH_QUALIFIER}/config \
+    --config-files /opt/graviteeio/apim/graviteeio-apim-gateway/config \
     --verbose \
     -n ${PKGNAME}-gateway-4x
 }
@@ -116,9 +115,8 @@ build_rest_api() {
   rm -fr build/skel/
 
   mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
-  cp -fr .staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-apim-rest-api-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim
-  ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-rest-api-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim/rest-api
-
+  cp -fr .staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-apim-rest-api-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-rest-api
+  ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-rest-api ${TEMPLATE_DIR}/opt/graviteeio/apim/rest-api
   mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
   cp build/files/systemd/graviteeio-apim-rest-api.service ${TEMPLATE_DIR}/etc/systemd/system/
 
@@ -144,7 +142,7 @@ build_rest_api() {
     --architecture ${ARCH} \
     --url "${URL}" \
     --description "${DESC}: Management API" \
-    --config-files /opt/graviteeio/apim/graviteeio-apim-rest-api-${VERSION_WITH_QUALIFIER}/config \
+    --config-files /opt/graviteeio/apim/graviteeio-apim-rest-api/config \
     --verbose \
     -n ${PKGNAME}-rest-api-4x
 }
@@ -153,9 +151,8 @@ build_management_ui() {
   rm -fr build/skel/
 
   mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
-  cp -fr .staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-apim-console-ui-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim
-  ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-console-ui-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim/management-ui
-
+  cp -fr .staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-apim-console-ui-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-console-ui
+  ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-console-ui ${TEMPLATE_DIR}/opt/graviteeio/apim/management-ui
   mkdir -p ${TEMPLATE_DIR}/etc/nginx/conf.d/
   cp build/files/graviteeio-apim-management-ui.conf ${TEMPLATE_DIR}/etc/nginx/conf.d/
 
@@ -178,7 +175,7 @@ build_management_ui() {
     --url "${URL}" \
     --description "${DESC}: Management UI" \
     --depends nginx \
-    --config-files /opt/graviteeio/apim/graviteeio-apim-console-ui-${VERSION_WITH_QUALIFIER}/constants.json \
+    --config-files /opt/graviteeio/apim/graviteeio-apim-console-ui/constants.json \
     --verbose \
     -n ${PKGNAME}-management-ui-4x
 }
@@ -187,9 +184,8 @@ build_portal_ui() {
   rm -fr build/skel/
 
   mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
-  cp -fr .staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-apim-portal-ui-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim
-  ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-portal-ui-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim/portal-ui
-
+  cp -fr .staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-apim-portal-ui-${VERSION_WITH_QUALIFIER} ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-portal-ui
+  ln -sf ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-portal-ui ${TEMPLATE_DIR}/opt/graviteeio/apim/portal-ui
   mkdir -p ${TEMPLATE_DIR}/etc/nginx/conf.d/
   cp build/files/graviteeio-apim-portal-ui.conf ${TEMPLATE_DIR}/etc/nginx/conf.d/
 
@@ -212,7 +208,7 @@ build_portal_ui() {
     --url "${URL}" \
     --description "${DESC}: Portal UI" \
     --depends nginx \
-    --config-files "${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-portal-ui-${VERSION_WITH_QUALIFIER}/assets/" \
+    --config-files "${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-portal-ui/assets/" \
     --verbose \
     -n ${PKGNAME}-portal-ui-4x
 }
