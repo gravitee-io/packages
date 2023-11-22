@@ -20,7 +20,7 @@ cd apim/4.x
 Run CentOS docker container with a volume mount:
 ```shell
 export PATH_TO_LOCAL_RPMS=$(pwd)
-docker run --rm -v ${PATH_TO_LOCAL_RPMS}:/local-rpms -it --entrypoint bash centos:7
+docker run --rm -v "${PATH_TO_LOCAL_RPMS}:/local-rpms" -w "/local-rpms" -it --entrypoint bash centos:7
 ```
 
 ### Determine the tag to use
@@ -65,6 +65,10 @@ gpgkey=https://packagecloud.io/graviteeio/rpms/gpgkey
 sslverify=1
 sslcacert=/etc/pki/tls/certs/ca-bundle.crt
 metadata_expire=300" > /etc/yum.repos.d/graviteeio.repo
+
+# For *-ui-* package, nginx is required, to install it:
+yum install -y epel-release
+yum install -y nginx
 
 # Some dark magic to have everything related to repo working properly on my local docker container
 cd /etc/yum.repos.d/
@@ -137,7 +141,7 @@ while true; do echo "$(date)    $(curl -s -u 'admin:adminadmin' 'http://localhos
 
 8. update rest-api config file to add another admin user and restart service to use it:
 ```bash
-sed '/^security:/,/^ *# Enable authentication/{/username: application1/,/#email:/{s/#email:/#email:\n        - user:\n          username: gravitee\n          #firstname:\n          #lastname:\n          # Password value: bloubiboulga\n          password: $2a$10$iJmJIgf7\/Y14AtR\/lKkyzeX5cyL5nL4lgePjiBVvRkq4m652E70oy\n          roles: ORGANIZATION:ADMIN,ENVIRONMENT:ADMIN\n          #email:/}}' /opt/graviteeio/apim/rest-api/config/gravitee.yml
+sed -i '/^security:/,/^ *# Enable authentication/{/username: application1/,/#email:/{s/#email:/#email:\n        - user:\n          username: gravitee\n          #firstname:\n          #lastname:\n          # Password value: bloubiboulga\n          password: $2a$10$iJmJIgf7\/Y14AtR\/lKkyzeX5cyL5nL4lgePjiBVvRkq4m652E70oy\n          roles: ORGANIZATION:ADMIN,ENVIRONMENT:ADMIN\n          #email:/}}' /opt/graviteeio/apim/rest-api/config/gravitee.yml
 
 sudo systemctl restart graviteeio-apim-rest-api.service
 ```
@@ -153,3 +157,63 @@ sudo systemctl start nginx.service graviteeio-apim-rest-api.service graviteeio-a
 ```
 
 11. We should be able to connect on http://localhost:8084 always with user `gravitee`. The curl command to show the version should answer `3.20.21`
+
+
+### Test only that config and plugins are kept during an APIM upgrade
+
+This test run on docker only to ensure that upgrade will keep change in `gravitee.yml` and that custom plugin are kept also.
+
+
+1. Build rpm locally for 2 versions:
+```bash
+cd apim/4.x
+mkdir -p rpms/{4.0.12,4.1.3}
+
+[ -d .staging ] && rm -rf .staging
+./build.sh -v 4.0.12
+rm -f graviteeio-apim-4x-*.rpm   # as we install each rpm manually, we do not use the global rpm.
+mv graviteeio-apim-*.rpm rpms/4.0.12/
+
+[ -d .staging ] && rm -rf .staging
+./build.sh -v 4.1.3
+rm -f graviteeio-apim-4x-*.rpm   # as we install each rpm manually, we do not use the global rpm.
+mv graviteeio-apim-*.rpm rpms/4.1.3/
+```
+
+2. Run a local docker container with a volume for RPMs:
+```bash
+docker run --rm -v "${PWD}/rpms:/local-rpms" -w "/local-rpms" -it --entrypoint bash centos:7
+```
+
+3. Install first version of rest-api:
+```bash
+yum install -y 4.0.12/graviteeio-apim-rest-api-4x-4.0.12-1.noarch.rpm
+```
+
+4. Update configuration file and create a fake new plugin and then, list all existing plugins
+```bash
+sed -i '/^security:/,/^ *# Enable authentication/{/username: application1/,/#email:/{s/#email:/#email:\n        - user:\n          username: gravitee\n          #firstname:\n          #lastname:\n          # Password value: bloubiboulga\n          password: $2a$10$iJmJIgf7\/Y14AtR\/lKkyzeX5cyL5nL4lgePjiBVvRkq4m652E70oy\n          roles: ORGANIZATION:ADMIN,ENVIRONMENT:ADMIN\n          #email:/}}' /opt/graviteeio/apim/rest-api/config/gravitee.yml
+
+cp /opt/graviteeio/apim/graviteeio-apim-rest-api/plugins/{gravitee-alert-engine-connectors-ws-2.1.0.zip,gravitee-zzz-custom-fake-plugin-0.0.1.zip}
+
+ls -1 /opt/graviteeio/apim/graviteeio-apim-rest-api/plugins/ > /tmp/plugin-list_4.0.12.txt
+```
+
+5. Proceed to the upgrade and update plugin list files
+```bash
+yum upgrade -y 4.1.3/graviteeio-apim-rest-api-4x-4.1.3-1.noarch.rpm
+
+ls -1 /opt/graviteeio/apim/graviteeio-apim-rest-api/plugins/ > /tmp/plugin-list_4.1.3.txt
+```
+
+6. Validate that changes have been kept in config file and manually install plugin has not been deleted:
+```bash
+if grep -q "bloubiboulga" /opt/graviteeio/apim/rest-api/config/gravitee.yml; then echo "config file ✔"; else echo "config file ✕"; fi
+
+if [[ -f "/opt/graviteeio/apim/graviteeio-apim-rest-api/plugins/gravitee-zzz-custom-fake-plugin-0.0.1.zip" ]]; then echo "plugin ✔"; else echo "plugin ✕"; fi
+```
+
+7. Validate plugin list manually:
+```bash
+diff -y /tmp/plugin-list_4.0.12.txt /tmp/plugin-list_4.1.3.txt
+```
