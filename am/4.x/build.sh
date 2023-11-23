@@ -42,8 +42,8 @@ build_access_gateway() {
 	rm -fr build/skel/
 
 	mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/am
-	cp -fr .staging/graviteeio-am-full-${VERSION}/graviteeio-am-gateway-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/am
-	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/am/graviteeio-am-gateway-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/am/gateway
+	cp -fr .staging/graviteeio-am-full-${VERSION}/graviteeio-am-gateway-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/am/graviteeio-am-gateway
+	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/am/graviteeio-am-gateway ${TEMPLATE_DIR}/opt/graviteeio/am/gateway
 
 	mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
         cp build/files/systemd/graviteeio-am-gateway.service ${TEMPLATE_DIR}/etc/systemd/system/
@@ -70,7 +70,7 @@ build_access_gateway() {
             --architecture ${ARCH} \
             --url "${URL}" \
             --description  "${DESC}: Access Gateway" \
-            --config-files /opt/graviteeio/am/graviteeio-am-gateway-${VERSION}/config \
+            --config-files /opt/graviteeio/am/graviteeio-am-gateway/config \
             --verbose \
             -n ${PKGNAME}-gateway-4x
 }
@@ -79,8 +79,8 @@ build_management_api() {
 	rm -fr build/skel/
 	
 	mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/am
-        cp -fr .staging/graviteeio-am-full-${VERSION}/graviteeio-am-management-api-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/am
-	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/am/graviteeio-am-management-api-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/am/management-api
+        cp -fr .staging/graviteeio-am-full-${VERSION}/graviteeio-am-management-api-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/am/graviteeio-am-management-api
+	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/am/graviteeio-am-management-api ${TEMPLATE_DIR}/opt/graviteeio/am/management-api
 
         mkdir -p ${TEMPLATE_DIR}/etc/systemd/system/
 	cp build/files/systemd/graviteeio-am-management-api.service ${TEMPLATE_DIR}/etc/systemd/system/
@@ -107,7 +107,7 @@ build_management_api() {
             --architecture ${ARCH} \
             --url "${URL}" \
             --description  "${DESC}: Management API" \
-            --config-files /opt/graviteeio/am/graviteeio-am-management-api-${VERSION}/config \
+            --config-files /opt/graviteeio/am/graviteeio-am-management-api/config \
             --verbose \
             -n ${PKGNAME}-management-api-4x
 }
@@ -116,8 +116,8 @@ build_management_ui() {
 	rm -fr build/skel/
 
 	mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/am
-        cp -fr .staging/graviteeio-am-full-${VERSION}/graviteeio-am-management-ui-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/am
-	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/am/graviteeio-am-management-ui-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/am/management-ui
+        cp -fr .staging/graviteeio-am-full-${VERSION}/graviteeio-am-management-ui-${VERSION} ${TEMPLATE_DIR}/opt/graviteeio/am/graviteeio-am-management-ui
+	ln -sf ${TEMPLATE_DIR}/opt/graviteeio/am/graviteeio-am-management-ui ${TEMPLATE_DIR}/opt/graviteeio/am/management-ui
 
 	mkdir -p ${TEMPLATE_DIR}/etc/nginx/conf.d/
 	cp build/files/graviteeio-am-management-ui.conf ${TEMPLATE_DIR}/etc/nginx/conf.d/
@@ -141,7 +141,7 @@ build_management_ui() {
             --url "${URL}" \
             --description  "${DESC}: Management UI" \
             --depends nginx \
-            --config-files /opt/graviteeio/am/graviteeio-am-management-ui-${VERSION}/constants.json \
+            --config-files /opt/graviteeio/am/graviteeio-am-management-ui/constants.json \
             --verbose \
             -n ${PKGNAME}-management-ui-4x
 }
