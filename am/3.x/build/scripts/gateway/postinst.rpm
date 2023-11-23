@@ -1,4 +1,4 @@
 #!/bin/sh
 
-ln -sf /opt/graviteeio/am/graviteeio-am-gateway-%{version}/ /opt/graviteeio/am/gateway
+ln -sf /opt/graviteeio/am/graviteeio-am-gateway/ /opt/graviteeio/am/gateway
 chown -R gravitee:gravitee /opt/graviteeio/am/gateway

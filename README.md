@@ -217,3 +217,63 @@ if [[ -f "/opt/graviteeio/apim/graviteeio-apim-rest-api/plugins/gravitee-zzz-cus
 ```bash
 diff -y /tmp/plugin-list_4.0.12.txt /tmp/plugin-list_4.1.3.txt
 ```
+
+
+### Test only that config and plugins are kept during an AM upgrade
+
+This test run on docker only to ensure that upgrade will keep change in `gravitee.yml` and that custom plugin are kept also.
+
+
+1. Build rpm locally for 2 versions:
+```bash
+cd am/4.x
+mkdir -p rpms/{4.0.5,4.1.7}
+
+[ -d .staging ] && rm -rf .staging
+./build.sh -v 4.0.5
+rm -f graviteeio-am-4x-*.rpm   # as we install each rpm manually, we do not use the global rpm.
+mv graviteeio-am-*.rpm rpms/4.0.5/
+
+[ -d .staging ] && rm -rf .staging
+./build.sh -v 4.1.7
+rm -f graviteeio-am-4x-*.rpm   # as we install each rpm manually, we do not use the global rpm.
+mv graviteeio-am-*.rpm rpms/4.1.7/
+```
+
+2. Run a local docker container with a volume for RPMs:
+```bash
+docker run --rm -v "${PWD}/rpms:/local-rpms" -w "/local-rpms" -it --entrypoint bash centos:7
+```
+
+3. Install first version of rest-api:
+```bash
+yum install -y 4.0.5/graviteeio-am-management-api-4x-4.0.5-0.noarch.rpm
+```
+
+4. Update configuration file and create a fake new plugin and then, list all existing plugins
+```bash
+sed -i '/^security:/,/^ *# SMTP configuration used to send mails/{/username: admin/,/role: ORGANIZATION_OWNER/{s/role: ORGANIZATION_OWNER/role: ORGANIZATION_OWNER\n        - user:\n          username: gravitee\n          #firstname:\n          #lastname:\n          # Password value: bloubiboulga\n          password: $2a$10$iJmJIgf7\/Y14AtR\/lKkyzeX5cyL5nL4lgePjiBVvRkq4m652E70oy\n          roles: ORGANIZATION:ADMIN,ENVIRONMENT:ADMIN\n          #email:/}}' /opt/graviteeio/am/management-api/config/gravitee.yml
+
+cp /opt/graviteeio/am/management-api/plugins/{gravitee-alert-engine-connectors-ws-2.1.0.zip,gravitee-zzz-custom-fake-plugin-0.0.1.zip}
+
+ls -1 /opt/graviteeio/am/management-api/plugins/ > /tmp/plugin-list_4.0.5.txt
+```
+
+5. Proceed to the upgrade and update plugin list files
+```bash
+yum upgrade -y 4.1.7/graviteeio-am-management-api-4x-4.1.7-0.noarch
+
+ls -1 /opt/graviteeio/am/graviteeio-am-management-api/plugins/ > /tmp/plugin-list_4.1.7.txt
+```
+
+6. Validate that changes have been kept in config file and manually install plugin has not been deleted:
+```bash
+if grep -q "bloubiboulga" /opt/graviteeio/am/management-api/config/gravitee.yml; then echo "config file ✔"; else echo "config file ✕"; fi
+
+if [[ -f "/opt/graviteeio/am/management-api/plugins/gravitee-zzz-custom-fake-plugin-0.0.1.zip" ]]; then echo "plugin ✔"; else echo "plugin ✕"; fi
+```
+
+7. Validate plugin list manually:
+```bash
+diff -y /tmp/plugin-list_4.0.5.txt /tmp/plugin-list_4.1.7.txt
+```
