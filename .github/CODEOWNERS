@@ -1,7 +1,6 @@
 # Default
 
-*                                                            @gravitee-io/techops
-*                                                            @gravitee-io/devops
+*                                                            @gravitee-io/platform
 
 /apim/                                                       @gravitee-io/apim
 /am/                                                         @gravitee-io/am
