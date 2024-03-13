@@ -277,3 +277,135 @@ if [[ -f "/opt/graviteeio/am/management-api/plugins/gravitee-zzz-custom-fake-plu
 ```bash
 diff -y /tmp/plugin-list_4.0.5.txt /tmp/plugin-list_4.1.7.txt
 ```
+
+### Same test but with rpm from packageCloud
+
+Run a centos 7 container :
+
+```bash
+docker run --rm -it --entrypoint bash centos:7
+```
+
+And then install and upgrade gravitee management api:
+
+```bash
+echo "[graviteeio]
+name=graviteeio
+baseurl=https://packagecloud.io/graviteeio/rpms/el/7/\$basearch
+gpgcheck=0
+enabled=1
+gpgkey=https://packagecloud.io/graviteeio/rpms/gpgkey
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+metadata_expire=300" > /etc/yum.repos.d/graviteeio.repo
+
+yum install -y epel-release && yum install -y nginx
+
+yum install -y graviteeio-apim-rest-api-4x-4.1.4-1.noarch
+
+sed -i '/^security:/,/^ *# Enable authentication/{/username: application1/,/#email:/{s/#email:/#email:\n        - user:\n          username: gravitee\n          #firstname:\n          #lastname:\n          # Password value: bloubiboulga\n          password: $2a$10$iJmJIgf7\/Y14AtR\/lKkyzeX5cyL5nL4lgePjiBVvRkq4m652E70oy\n          roles: ORGANIZATION:ADMIN,ENVIRONMENT:ADMIN\n          #email:/}}' /opt/graviteeio/apim/graviteeio-apim-rest-api/config/gravitee.yml
+
+sed -i '/root level/{s/WARN/DEBUG/}' /opt/graviteeio/apim/graviteeio-apim-rest-api/config/logback.xml
+
+cp /opt/graviteeio/apim/graviteeio-apim-rest-api/plugins/{gravitee-alert-engine-connectors-ws-2.1.0.zip,gravitee-zzz-custom-fake-plugin-0.0.1.zip}
+
+yum upgrade -y graviteeio-apim-rest-api-4x-4.2.0-1.noarch
+```
+
+Check upgrade:
+
+```bash
+if grep -q "bloubiboulga" /opt/graviteeio/apim/graviteeio-apim-rest-api/config/gravitee.yml; then echo "config file ✔"; else echo "config file ✕"; fi
+
+if grep -q '<root level="DEBUG">' /opt/graviteeio/apim/graviteeio-apim-rest-api/config/logback.xml; then echo "log file ✔"; else echo "log file ✕"; fi
+
+if [[ -f "/opt/graviteeio/apim/graviteeio-apim-rest-api/plugins/gravitee-zzz-custom-fake-plugin-0.0.1.zip" ]]; then echo "plugin ✔"; else echo "plugin ✕"; fi
+```
+
+
+## Debugging FPM
+
+https://fpm.readthedocs.io/en/latest/cli-reference.html?highlight=debug#general-options
+
+```bash
+VERSION=4.2.4
+VERSION_WITH_QUALIFIER=4.2.4
+TEMPLATE_DIR="build/skel/el"
+
+filename="graviteeio-full-${VERSION_WITH_QUALIFIER}.zip"
+
+rm -fr .staging && mkdir .staging
+
+curl -Lo ".staging/${filename}" "https://download.gravitee.io/graviteeio-apim/distributions/${filename}"
+curl -Lo ".staging/${filename}.sha1" "https://download.gravitee.io/graviteeio-apim/distributions/${filename}.sha1"
+
+cd .staging \
+  && sha1sum -c ${filename}.sha1 \
+  && unzip -q ${filename} \
+  && rm ${filename} ${filename}.sha1 \
+  cd ..
+
+mkdir -p "${TEMPLATE_DIR}/opt/graviteeio/apim"
+cp -fr ".staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-apim-gateway-${VERSION_WITH_QUALIFIER}" "${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-gateway"
+ln -sf "${TEMPLATE_DIR}7/opt/graviteeio/apim/graviteeio-apim-gateway" "${TEMPLATE_DIR}/opt/graviteeio/apim/gateway"
+mkdir -p "${TEMPLATE_DIR}/etc/systemd/system/"
+cp "build/files/systemd/graviteeio-apim-gateway.service" "${TEMPLATE_DIR}/etc/systemd/system/"
+
+mkdir -p "${TEMPLATE_DIR}/etc/init.d"
+cp "build/files/init.d/graviteeio-apim-gateway" "${TEMPLATE_DIR}/etc/init.d"
+
+mkdir -p "${TEMPLATE_DIR}/fpm_workspace"
+
+docker run --rm -ti \
+  -v "${PWD}:/tmp/fpm" \
+  -w "/tmp/fpm" \
+  -e "VERSION=${VERSION}" \
+  -e "TEMPLATE_DIR=${TEMPLATE_DIR}" \
+  -e RELEASE="1" \
+  -e PKGNAME="graviteeio-apim" \
+  -e LICENSE="Apache 2.0" \
+  -e VENDOR="GraviteeSource" \
+  -e URL="https://gravitee.io" \
+  -e USER="gravitee" \
+  -e ARCH="noarch" \
+  -e DESC="Gravitee.io API Management 4.x" \
+  -e MAINTAINER="David BRASSELY <david.brassely@graviteesource.com>" \
+  -e DOCKER_WDIR="/tmp/fpm" \
+  -e DOCKER_FPM="graviteeio/fpm" \
+  --entrypoint /bin/bash \
+  graviteeio/fpm:rpm
+
+fpm -t rpm \
+    --rpm-user ${USER} \
+    --rpm-group ${USER} \
+    --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
+    --rpm-attr "0755,root,root:/etc/init.d/graviteeio-apim-gateway" \
+    --directories /opt/graviteeio \
+    --before-install build/scripts/gateway/preinst.rpm \
+    --after-install build/scripts/gateway/postinst.rpm \
+    --before-remove build/scripts/gateway/prerm.rpm \
+    --after-remove build/scripts/gateway/postrm.rpm \
+    --iteration ${RELEASE} \
+    -C ${TEMPLATE_DIR} \
+    -s dir -v ${VERSION} \
+    --license "${LICENSE}" \
+    --vendor "${VENDOR}" \
+    --maintainer "${MAINTAINER}" \
+    --architecture ${ARCH} \
+    --url "${URL}" \
+    --description "${DESC}: API Gateway" \
+    --config-files /opt/graviteeio/apim/graviteeio-apim-gateway/config \
+    --verbose \
+    -n ${PKGNAME}-gateway-4x \
+    --debug \
+    --debug-workspace
+```
+
+
+## External Resources
+
+* https://github.com/jordansissel/fpm[FPM source code]
+* https://fpm.readthedocs.io/en/latest/docker.html[FPM and docker]
+* https://rpm-software-management.github.io/rpm/manual/spec.html[RPM Spec file format]
+* https://lea-linux.org/documentations/Systemd[French documentation about Systemd]
+
