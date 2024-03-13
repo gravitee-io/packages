@@ -1,0 +1,285 @@
+= Create Azure VM via terraform to test RPMs
+
+Here are some terraform code to let you:
+
+
+* create a VM with OS:
+** RedHat 8/9
+** Centos Stream 9
+** Centos 7
+** Suze
+* make it accessible only from our IP on SSH port (22)
+* ephemeral SSH key is generated
+* with included script to make multiple installation easier:
+** install all gravitee prerequisites (java, mongo, elastic)
+** install all gravitee from artifact hub repo with specific version
+** install all gravitee from built RPMs
+** configure everything to make it works by default from SSH tunnel
+
+
+== Prerequisites
+
+* Get an access to Azure Resource https://portal.azure.com/#@graviteesource.com/resource/subscriptions/02ae5fba-84b0-443a-9df6-9be92297c139/resourceGroups/gravitee-rpm-dev/overview[gravitee-rpm-dev]
+* Having https://developer.hashicorp.com/terraform/install[terraform] installed on your laptop (`asdf install terraform latest` for `asdf` users 😁)
+* Check existing resource allocated: https://portal.azure.com/#@graviteesource.com/resource/subscriptions/02ae5fba-84b0-443a-9df6-9be92297c139/resourceGroups/gravitee-rpm-dev/overview
+
+
+== Search VM
+
+The best way to found valid info about which VM to create is to create it manually and on VM overview and "Essential" pane, click on the right to "JSON view" and get your info in field: "imageReference".
+
+[source,bash]
+----
+az vm image list --all \
+    --subscription="02ae5fba-84b0-443a-9df6-9be92297c139" \
+    --location="francecentral" \
+    --publisher="redhat" \
+    --architecture="x64" \
+    --offer="rh-rhel" \
+    --sku="9" \
+    --output=table \
+    | grep -v -e "redhat-limited" -e "gen1" | vim -
+
+az vm image show \
+    --subscription="02ae5fba-84b0-443a-9df6-9be92297c139" \
+    --location="francecentral" \
+    --urn "RedHat:rh-rhel:rh-rhel9:9.3.2024020814" \
+    | vim -
+
+az vm list-sizes \
+    --subscription="02ae5fba-84b0-443a-9df6-9be92297c139" \
+    --location="francecentral" \
+    --output=table \
+    | vim -
+----
+
+Note: "northeurope" has smaller price but current ressource_group is on "francecentral" which is maybe more green.
+
+
+== Provision a VM quickly
+
+[source,bash]
+----
+cd redhat
+terraform init -upgrade
+export TF_VAR_allowed_ips="$(curl -s 'https://ipv4.seeip.org')/32"
+terraform apply -auto-approve
+
+ssh ...
+tmux attach
+...
+
+terraform destroy -auto-approve
+rm -rf .terraform* terraform.tfstate*
+----
+
+
+
+== Provision a VM in details
+
+. From `redhat`, `suze` or `centos` folder:
++
+[source,bash]
+----
+cd redhat
+----
+
+. Initialise terraform
++
+[source,bash]
+----
+terraform init -upgrade
+
+export TF_VAR_allowed_ips="$(curl -s 'https://ipv4.seeip.org')/32"
+----
+Note: the `allowed_ips` var is used to filter which IP is able to connect to the VM.
+By default, it is public.
+
+. Other customization
++
+[source,bash]
+----
+export TF_VAR_username="matthieu"
+export TF_VAR_allowed_ips="$(curl -s 'https://ipv4.seeip.org')/32"
+export TF_VAR_ssh_key_filename="sshkey.pem"
+export TF_VAR_local_rpm_folder_path="${HOME}/development/workspaces/gravitee-io/packages/apim/4.x/rpms"
+export TF_VAR_remote_exec_cmds="[\"sudo yum install -y tmux\", \"chmod u+x install_*.sh\", \"tmux new-session \\\; send-keys './install_redhat.sh && sleep 60 && ./install_redhat.sh test_graviteeio_upgrade 4.4.9 /home/matthieu/rpms' C-m \\\; detach-client\"]"
+env | grep TF_VAR
+----
+
+. plan and apply to get your VM
++
+[source,bash]
+----
+terraform plan -out main.tfplan
+terraform apply main.tfplan
+----
+
+. The ssh command to connect to the VM is provided as a terraform output in `ssh_command_to_connect` var.
+
+. In case you want to test local RPMs
+.. build your RPM
++
+[source,bash]
+----
+cd ../../../apim/4.x/
+./build.sh -v 4.2.4
+cd -
+----
+
+.. To upload local rpm builded to the remote VM (after already build RPMs):
++
+[source,bash]
+----
+scp -i rpm_*_id_rsa.pem ../../apim/4.x/graviteeio-apim-*-4x*.rpm azureadmin@20.188.42.181:.
+----
+
+. And then in the remote machine (after ssh connexion):
++
+[source,bash]
+----
+tmux attach
+./install_redhat.sh help
+----
+
+. Test that APIM is running:
++
+[source,bash]
+----
+curl 'http://localhost:8084/' |grep -i gravitee
+curl 'http://localhost:8085/' |grep -i gravitee
+----
+
+. Notice that current script `install_redhat.sh` have some usefull command like:
++
+[source,bash]
+----
+./install_redhat.sh test_graviteeio_upgrade 4.4.9 /home/matthieu/rpms
+----
+Which install from repository the version 4.4.9 and after creating api and tested it, upgrade with local rpm installation and test that all work.
+
+. And then destroy the VM when test is ended
++
+[source,bash]
+----
+terraform plan -destroy -out main.destroy.tfplan
+terraform apply -auto-approve main.destroy.tfplan
+----
+
+. cleanup terraform data:
++
+WARNING: remove these files/folders only after deletion of azure resources
++
+[source,bash]
+----
+rm -rf .terraform* terraform.tfstate*
+----
+
+
+
+=== Additionnal notes
+
+* To see generated plan later:
++
+[source,bash]
+----
+terraform show -no-color main.tfplan | vim -
+----
+Notice that you can remove the `-no-color` param and use plugin `AnsiEsc` in vim to get color rendering.
+
+* Test VM exist in Azure:
++
+[source,bash]
+----
+az vm list \
+  --subscription="02ae5fba-84b0-443a-9df6-9be92297c139" \
+  --resource-group "gravitee-rpm-dev" \
+  --query "[].{\"VM Name\":name}" \
+  --output table
+----
+
+
+
+== External Documentation
+
+* Based on documentation: https://learn.microsoft.com/fr-fr/azure/virtual-machines/linux/quick-create-terraform[Quick create terraform]
+* https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs[Terraform Azure provider]
+
+Some documentation about redhat on Azure and Plan (needed for Centos VMs):
+
+* https://learn.microsoft.com/en-us/azure/virtual-machines/workloads/redhat/redhat-images#rhel-9-image-types
+* https://learn.microsoft.com/en-us/partner-center/marketplace/marketplace-virtual-machines
+* https://learn.microsoft.com/en-us/partner-center/marketplace/azure-vm-plan-pricing-and-availability
+
+
+
+== Internal Documentation
+
+This terraform code allow us to easily create ephemeral VM to test RPM, configuration, anything.
+
+Organisation:
+
+* `module_vm`: this module centralize all needed to provision a VM
+** `module_vm/dependencies`: this module is a submodule use for the case where we want a specific VM definition but still reuse everything else (networks, etc)
+* `redhat`: this is the terraform input code to provision a RedHat VM, by default in version 9
+* `suze`: same but for Suze 15
+* `centos`: same with a specific VM (we need a plan and a marketplace agreement) with Centos Stream 9
+
+
+=== VM specificities
+
+==== Centos Stream 9
+
+This VM need a plan and marketplace agreement as it was provided by an external Partner in Azure Marketplace.
+
+==== Centos 7
+
+This VM need a plan and marketplace agreement as it was provided by an external Partner in Azure Marketplace.
+
+to use centos 7, define env var:
+
+[source,bash]
+----
+export TF_VAR_os_name="centos-7-minimal"
+----
+
+
+==== RedHat 8
+
+To provision a VM with RedHat 8 you can set:
+
+[source,bash]
+----
+export TF_VAR_os_sku=8-gen2
+export TF_VAR_remote_exec_cmds='["cat /etc/*release*"]'
+----
+
+However, by default you can't update repolist and install any software. You need to register to RedHat first in:
+https://www.redhat.com/wapps/ugc/register.html
+
+And then you can connect to the VM and run:
+
+[source,bash]
+----
+# Red Hat Subscription Management credentials
+RHSM_USERNAME="YOUR_USERNAME"
+RHSM_PASSWORD="YOUR_PASSWORD"
+
+# Activate the Red Hat subscription
+subscription-manager register --username="$RHSM_USERNAME" --password="$RHSM_PASSWORD" --auto-attach
+
+# Refresh subscription manager
+subscription-manager refresh
+
+# List available subscriptions
+subscription-manager list --available
+----
+
+Plus continue the installation process.
+
+
+== TODOs
+
+* refactor install_* script to `install.sh` and `manage.sh` dedicated to test
+* use `set -euo pipefail` in sh script
+* test all changes on suze and centos

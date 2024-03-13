@@ -20,3 +20,10 @@
 
 # Others
 .DS_Store
+
+# Any internal terraform files
+**/.terraform*
+**/terraform.tfstate
+**/terraform.tfstate.backup
+test/terraform_linux_vm/**/*.pem
+
