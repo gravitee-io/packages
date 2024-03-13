@@ -3,5 +3,9 @@
 ln -sf /opt/graviteeio/apim/graviteeio-apim-portal-ui /opt/graviteeio/apim/portal-ui
 chown -R gravitee:gravitee /opt/graviteeio/apim/portal-ui
 
-# Restart nginx process to take care of the new location
-systemctl restart nginx
+
+if [ "systemd" = "$(ps -p 1 -o comm=)" ]
+then
+  # Restart nginx process to take care of the new location
+  systemctl restart nginx
+fi
