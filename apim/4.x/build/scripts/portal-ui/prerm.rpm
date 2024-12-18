@@ -1,2 +1,3 @@
 #!/bin/sh
 
+echo "Execute graviteeio-apim-portal-ui prerm script."

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+echo "Execute graviteeio-apim-portal-ui postinst script."
+
 ln -sf /opt/graviteeio/apim/graviteeio-apim-portal-ui /opt/graviteeio/apim/portal-ui
 chown -R gravitee:gravitee /opt/graviteeio/apim/portal-ui
 

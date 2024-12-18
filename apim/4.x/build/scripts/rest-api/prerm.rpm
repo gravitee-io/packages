@@ -10,6 +10,8 @@
 #       $1=0         : indicates a removal
 #       $1=1         : indicates an upgrade
 
+echo "Execute graviteeio-apim-rest-api pretrm script."
+
 SERVICE_NAME=graviteeio-apim-rest-api
 STOP_REQUIRED=false
 REMOVE_SERVICE=false
