@@ -14,8 +14,8 @@ checkVersionUpgrade() {
     echo "INFO: Some version mismatch issues have been identified in the previous version of this RPM package."
     echo "INFO: To avoid any destructive changes if the upgrade is applied, some checks on the versions will be ran."
 
-    # Get installedVersion from /opt/graviteeio/apim/graviteeio-apim-gateway-xxxxxxxx
-    installedVersion=$(ls -d /opt/graviteeio/apim/graviteeio-apim-gateway-* | cut -d- -f4)
+    # Get installedVersion from /opt/graviteeio/apim/graviteeio-apim-gateway*/lib/gravitee-apim-gateway-standalone-bootstrap-*.jar
+    installedVersion="$(ls -1 /opt/graviteeio/apim/graviteeio-apim-gateway*/lib/gravitee-apim-gateway-standalone-bootstrap-*.jar | sed 's/^.*\/gravitee-apim-gateway-standalone-bootstrap-\([0-9.]*\)\.jar/\1/')"
     # Display installedVersion
     echo "Installed version: $installedVersion"
 
@@ -90,6 +90,8 @@ err_exit() {
     echo "$@" >&2
     exit 1
 }
+
+echo "Execute graviteeio-apim-gateway preinst script."
 
 case "$1" in
 

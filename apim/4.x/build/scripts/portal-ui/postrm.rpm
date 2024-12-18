@@ -10,6 +10,8 @@
 #       $1=0         : indicates a removal
 #       $1=1         : indicates an upgrade
 
+echo "Execute graviteeio-apim-portal-ui postrm script."
+
 USERNAME=gravitee
 REMOVE_DIRS=falses
 REMOVE_USER_AND_GROUP=false

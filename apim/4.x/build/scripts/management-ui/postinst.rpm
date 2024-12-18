@@ -1,5 +1,7 @@
 #!/bin/sh
 
+echo "Execute graviteeio-apim-console-ui postinst script."
+
 ln -sf /opt/graviteeio/apim/graviteeio-apim-console-ui /opt/graviteeio/apim/management-ui
 chown -R gravitee:gravitee /opt/graviteeio/apim/management-ui
 

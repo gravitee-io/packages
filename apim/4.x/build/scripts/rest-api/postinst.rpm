@@ -1,5 +1,7 @@
 #!/bin/sh
 
+echo "Execute graviteeio-apim-rest-api postinst script."
+
 ln -sf /opt/graviteeio/apim/graviteeio-apim-rest-api /opt/graviteeio/apim/rest-api
 chown -R gravitee:gravitee /opt/graviteeio/apim/rest-api
 

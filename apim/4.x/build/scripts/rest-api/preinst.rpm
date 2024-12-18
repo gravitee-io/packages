@@ -14,8 +14,8 @@ checkVersionUpgrade() {
     echo "INFO: Some version mismatch issues have been identified in the previous version of this RPM package."
     echo "INFO: To avoid any destructive changes if the upgrade is applied, some checks on the versions will be ran."
 
-    # Get installedVersion from /opt/graviteeio/apim/graviteeio-apim-rest-api-xxxxxxxx
-    installedVersion=$(ls -d /opt/graviteeio/apim/graviteeio-apim-rest-api-* | cut -d- -f5)
+    # Get installedVersion from /opt/graviteeio/apim/graviteeio-apim-rest-api*/lib/gravitee-apim-rest-api-standalone-bootstrap-*.jar
+    installedVersion="$(ls -1 /opt/graviteeio/apim/graviteeio-apim-rest-api*/lib/gravitee-apim-rest-api-standalone-bootstrap-*.jar | sed 's/^.*\/gravitee-apim-rest-api-standalone-bootstrap-\([0-9.]*\)\.jar/\1/')"
     # Display installedVersion
     echo "Installed version: $installedVersion"
 
@@ -86,10 +86,20 @@ createGroupAndUserRedHat() {
     fi
 }
 
+cleanup_lucene_index() {
+    if [ -d "/opt/graviteeio/apim/graviteeio-apim-rest-api/data" ]
+    then
+        echo "Cleanup Lucene index cache in /opt/graviteeio/apim/graviteeio-apim-rest-api/data:"
+        rm -rf /opt/graviteeio/apim/graviteeio-apim-rest-api/data/*
+    fi
+}
+
 err_exit() {
     echo "$@" >&2
     exit 1
 }
+
+echo "Execute graviteeio-apim-rest-api pretinst script."
 
 case "$1" in
 
@@ -101,6 +111,7 @@ case "$1" in
     upgrade)
         checkVersionUpgrade
         createGroupAndUserDebian
+        cleanup_lucene_index
     ;;
 
     abort-deconfigure|abort-upgrade|abort-remove)
@@ -114,6 +125,7 @@ case "$1" in
     2)
         checkVersionUpgrade
         createGroupAndUserRedHat
+        cleanup_lucene_index
     ;;
 
     *)
