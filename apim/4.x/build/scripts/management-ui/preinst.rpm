@@ -14,8 +14,8 @@ checkVersionUpgrade() {
     echo "INFO: Some version mismatch issues have been identified in the previous version of this RPM package."
     echo "INFO: To avoid any destructive changes if the upgrade is applied, some checks on the versions will be ran."
 
-    # Get installedVersion from /opt/graviteeio/apim/graviteeio-apim-console-ui-xxxxxxxx
-    installedVersion=$(ls -d /opt/graviteeio/apim/graviteeio-apim-console-ui-* | cut -d- -f5)
+    # Get installedVersion from /opt/graviteeio/apim/graviteeio-apim-console-ui/build.json
+    installedVersion=$(jq --raw-output '.version' /opt/graviteeio/apim/graviteeio-apim-console-ui*/build.json)
     # Display installedVersion
     echo "Installed version: $installedVersion"
 
@@ -90,6 +90,8 @@ err_exit() {
     echo "$@" >&2
     exit 1
 }
+
+echo "Execute graviteeio-apim-console-ui preinst script."
 
 case "$1" in
 

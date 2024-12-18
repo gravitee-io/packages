@@ -10,6 +10,8 @@
 #       $1=0         : indicates a removal
 #       $1=1         : indicates an upgrade
 
+echo "Execute graviteeio-apim-rest-api postrm script."
+
 USERNAME=gravitee
 REMOVE_DIRS=falses
 REMOVE_USER_AND_GROUP=false
@@ -51,21 +53,21 @@ case "$1" in
 esac
 
 if [ "$REMOVE_DIRS" = "true" ]; then
-    if [ -d /opt/graviteeio/apim/graviteeio-apim-rest-api-%{version}/data ]; then
+    if [ -d /opt/graviteeio/apim/graviteeio-apim-rest-api/data ]; then
         echo -n "Deleting data directory..."
-        rm -rf /opt/graviteeio/apim/graviteeio-apim-rest-api-%{version}/data
+        rm -rf /opt/graviteeio/apim/graviteeio-apim-rest-api/data
         echo " OK"
     fi
 
-    if [ -d /opt/graviteeio/apim/graviteeio-apim-rest-api-%{version}/logs ]; then
+    if [ -d /opt/graviteeio/apim/graviteeio-apim-rest-api/logs ]; then
         echo -n "Deleting logs directory..."
-        rm -rf /opt/graviteeio/apim/graviteeio-apim-rest-api-%{version}/logs
+        rm -rf /opt/graviteeio/apim/graviteeio-apim-rest-api/logs
         echo " OK"
     fi
 
-    if [ -d /opt/graviteeio/apim/graviteeio-apim-rest-api-%{version}/plugins ]; then
+    if [ -d /opt/graviteeio/apim/graviteeio-apim-rest-api/plugins ]; then
         echo -n "Deleting plugins directory..."
-        rm -rf /opt/graviteeio/apim/graviteeio-apim-rest-api-%{version}/plugins
+        rm -rf /opt/graviteeio/apim/graviteeio-apim-rest-api/plugins
         echo " OK"
     fi
 fi

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+echo "Execute graviteeio-apim-gateway postinst script."
+
 ln -sf /opt/graviteeio/apim/graviteeio-apim-gateway/ /opt/graviteeio/apim/gateway
 chown -R gravitee:gravitee /opt/graviteeio/apim/gateway
 
