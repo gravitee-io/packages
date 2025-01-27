@@ -14,6 +14,8 @@ SERVICE_NAME=graviteeio-apim-gateway
 STOP_REQUIRED=false
 REMOVE_SERVICE=false
 
+echo "Execute graviteeio-apim-gateway prerm script."
+
 case "$1" in
 
     # Debian ####################################################
