@@ -2,3 +2,9 @@
 
 ln -sf /opt/graviteeio/am/graviteeio-am-gateway/ /opt/graviteeio/am/gateway
 chown -R gravitee:gravitee /opt/graviteeio/am/gateway
+
+if [ "systemd" = "$(ps -p 1 -o comm=)" ] && [ -f /etc/init.d/graviteeio-am-gateway ]
+then
+  echo "As systemd is in place, we remove the sysV script from /etc/init.d/ folder."
+  rm -f /etc/init.d/graviteeio-am-gateway
+fi
