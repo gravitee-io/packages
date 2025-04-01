@@ -3,5 +3,11 @@
 ln -sf /opt/graviteeio/am/graviteeio-am-management-ui/ /opt/graviteeio/am/management-ui
 chown -R gravitee:gravitee /opt/graviteeio/am/management-ui
 
-# Restart nginx process to take care of the new location
-systemctl restart nginx
+if [ "systemd" = "$(ps -p 1 -o comm=)" ]; then
+  # Restart nginx process to take care of the new location
+  if command -v systemctl >/dev/null 2>&1; then
+    systemctl restart nginx
+  elif command -v service >/dev/null 2>&1; then
+    service restart nginx
+  fi
+fi
