@@ -35,18 +35,42 @@ type=rpm-md" | sudo tee /etc/yum.repos.d/elasticsearch.repo > /dev/null
 }
 
 install_openjdk(){
-    if [[ "$os" == "centos" && "$version" -lt 8 ]]
-    then
-      # @see https://www.oracle.com/java/technologies/downloads/#java17
-      curl -O 'https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.rpm'
-      curl -O 'https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.rpm.sha256'
-      echo " jdk-17_linux-x64_bin.rpm" >> jdk-17_linux-x64_bin.rpm.sha256
-      sha256sum -c jdk-17_linux-x64_bin.rpm.sha256 || exit 1
+    local version="${1:-21}"
 
-      sudo yum install -y jdk-17_linux-x64_bin.rpm
-    else
-      sudo yum install -y java-17-openjdk-devel
-    fi
+    case $version in
+      21)
+        if [[ "$os" == "centos" && "$version" -lt 8 ]]
+        then
+          # @see https://www.oracle.com/java/technologies/downloads/#java17
+          curl -O 'https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.rpm'
+          curl -O 'https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.rpm.sha256'
+          echo " jdk-21_linux-x64_bin.rpm" >> jdk-21_linux-x64_bin.rpm.sha256
+          sha256sum -c jdk-21_linux-x64_bin.rpm.sha256 || exit 1
+
+          sudo yum install -y jdk-21_linux-x64_bin.rpm
+        else
+          sudo yum install -y java-21-openjdk-devel
+        fi
+      ;;
+      17)
+        if [[ "$os" == "centos" && "$version" -lt 8 ]]
+        then
+          # @see https://www.oracle.com/java/technologies/downloads/#java17
+          curl -O 'https://download.oracle.com/java/17/archive/jdk-17.0.12_linux-x64_bin.rpm'
+          curl -O 'https://download.oracle.com/java/17/archive/jdk-17.0.12_linux-x64_bin.rpm.sha256'
+          echo " jdk-17.0.12_linux-x64_bin.rpm" >> jdk-17.0.12_linux-x64_bin.rpm.sha256
+          sha256sum -c jdk-17.0.12_linux-x64_bin.rpm.sha256 || exit 1
+
+          sudo yum install -y jdk-17.0.12_linux-x64_bin.rpm
+        else
+          sudo yum install -y java-17-openjdk-devel
+        fi
+      ;;
+      *)
+        echo "ERROR: install_openjdk version $version is not possible - install manually" >&2
+        exit 1
+      ;;
+    esac
 
     java -version
 }
@@ -74,16 +98,18 @@ install_tools(){
 }
 
 install_graviteeio_repository(){
+  # https://packagecloud.io/docs#rpm_any
     echo "[graviteeio]
 name=graviteeio
-baseurl=https://packagecloud.io/graviteeio/rpms/el/7/\$basearch
-gpgcheck=0
+baseurl=https://packagecloud.io/graviteeio/nightly/el/7/\$basearch
+gpgcheck=1
+repo_gpgcheck=1
 enabled=1
-gpgkey=https://packagecloud.io/graviteeio/rpms/gpgkey
+gpgkey=https://packagecloud.io/graviteeio/nightly/gpgkey,https://packagecloud.io/graviteeio/nightly/gpgkey/graviteeio-nightly-319791EF7A93C060.pub.gpg
 sslverify=1
 sslcacert=/etc/pki/tls/certs/ca-bundle.crt
 metadata_expire=300" | sudo tee /etc/yum.repos.d/graviteeio.repo > /dev/null
-    sudo yum -q makecache -y --disablerepo='*' --enablerepo='graviteeio'
+    sudo yum --quiet makecache --assumeyes --disablerepo='*' --enablerepo='graviteeio'
 }
 
 open_apim_ports(){
@@ -243,7 +269,7 @@ setup_license(){
 
 install_prerequities(){
     install_tools
-    install_openjdk
+    install_openjdk 21
     install_nginx
     install_mongo
     install_elasticsearch
