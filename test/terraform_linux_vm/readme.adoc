@@ -103,7 +103,7 @@ export TF_VAR_username="matthieu"
 export TF_VAR_allowed_ips="$(curl -s 'https://ipv4.seeip.org')/32"
 export TF_VAR_ssh_key_filename="sshkey.pem"
 export TF_VAR_local_rpm_folder_path="${HOME}/development/workspaces/gravitee-io/packages/apim/4.x/rpms"
-export TF_VAR_remote_exec_cmds="[\"sudo yum install -y tmux\", \"chmod u+x install_*.sh\", \"tmux new-session \\\; send-keys './install_redhat.sh && sleep 60 && ./install_redhat.sh test_graviteeio_upgrade 4.4.9 /home/matthieu/rpms' C-m \\\; detach-client\"]"
+export TF_VAR_remote_exec_cmds="[\"sudo yum install -y tmux\", \"chmod u+x install_*.sh\", \"tmux new-session \\\; send-keys './install_redhat.sh && sleep 60 && ./install_redhat.sh test_graviteeio_apim_upgrade 4.4.9 /home/matthieu/rpms' C-m \\\; detach-client\"]"
 env | grep TF_VAR
 ----
 
@@ -154,7 +154,7 @@ curl 'http://localhost:8085/' |grep -i gravitee
 +
 [source,bash]
 ----
-./install_redhat.sh test_graviteeio_upgrade 4.4.9 /home/matthieu/rpms
+./install_redhat.sh test_graviteeio_apim_upgrade 4.4.9 /home/matthieu/rpms
 ----
 Which install from repository the version 4.4.9 and after creating api and tested it, upgrade with local rpm installation and test that all work.
 

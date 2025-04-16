@@ -114,8 +114,19 @@ metadata_expire=300" | sudo tee /etc/yum.repos.d/graviteeio.repo > /dev/null
 
 open_apim_ports(){
   echo "Use semanage port to open port 8084 (console) and 8085 (portal) on SE Linux."
+  open_ports_semanage 8084 8085
+  open_ports_firewall "8082-8085"
+}
+
+open_am_ports(){
+  echo "Use semanage port to open port 8092 (AM gateway) and 8093 (AM management api) and 8094 (AM Console) on SE Linux."
+  open_ports_semanage 8092 8093 8094
+  open_ports_firewall "8092-8094"
+}
+
+open_ports_semanage() {
   local port_number
-  for port_number in 8084 8085
+  for port_number in "$@"
   do
     if sudo semanage port -l | grep http_port_t | grep -q "${port_number}"
     then
@@ -126,12 +137,15 @@ open_apim_ports(){
       sudo semanage port -a -t http_port_t -p tcp "${port_number}"
     fi
   done
+}
 
+open_ports_firewall() {
   # @see: https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/8/html/configuring_and_managing_networking/using-and-configuring-firewalld_configuring-and-managing-networking#customizing-firewall-settings-for-a-specific-zone-to-enhance-security_working-with-firewalld-zones
-  if (command -v firewall-cmd > /dev/null) && ! (sudo firewall-cmd --list-ports | grep -q '8082-8085/tcp')
+  local ports_range="$1"
+  if (command -v firewall-cmd > /dev/null) && ! (sudo firewall-cmd --list-ports | grep -q "${ports_range}/tcp")
   then
-    echo "firewall detected - open port range: 8082-8085/tcp"
-    sudo firewall-cmd --add-port=8082-8085/tcp
+    echo "firewall detected - open port range: ${ports_range}/tcp"
+    sudo firewall-cmd --add-port="${ports_range}/tcp"
   fi
 }
 
@@ -165,7 +179,7 @@ get_current_public_ip() {
   return 1
 }
 
-configure_frontend(){
+configure_apim_frontend(){
   local public_ip="$1"
   if [[ -z "${public_ip}" ]]
   then
@@ -188,7 +202,17 @@ configure_frontend(){
     --data-raw "{\"portal\":{\"url\":\"http://${public_ip}:8085/\"}}"
 }
 
-install_graviteeio_from_repository(){
+configure_am_frontend(){
+  local public_ip="$1"
+  if [[ -z "${public_ip}" ]]
+  then
+    echo "Missing IP argument." >&2
+    return 1
+  fi
+  sudo sed -i "/\"baseURL\": /{s#\"baseURL\": \".*\"#\"baseURL\": \"http://${public_ip}:8093/management\"#}" /opt/graviteeio/am/management-ui/constants.json
+}
+
+install_graviteeio_apim_from_repository(){
   local specific_version="${1}"
   if [[ -n "${specific_version}" ]]; then specific_version="-${specific_version}-1"; fi
 
@@ -204,22 +228,22 @@ install_graviteeio_from_repository(){
   if public_ip="$(get_current_public_ip)"
   then
     echo "Public IP detected: ${public_ip}"
-    configure_frontend "${public_ip}"
+    configure_apim_frontend "${public_ip}"
   else
     echo "Public IP not found, configure with localhost"
-    configure_frontend "localhost"
+    configure_apim_frontend "localhost"
   fi
 
   sudo systemctl start graviteeio-apim-gateway graviteeio-apim-rest-api
   sleep 30
-  wait_backends_ready
+  wait_apim_backends_ready
   open_apim_ports
   sudo systemctl restart nginx
 
   echo "Graviteeio installation Done."
 }
 
-install_graviteeio_from_local_rpms(){
+install_graviteeio_apim_from_local_rpms(){
   local rpms_path="${1:-${HOME}}"
   for rpm in "${rpms_path}"/*.rpm
   do
@@ -230,23 +254,50 @@ install_graviteeio_from_local_rpms(){
   sudo systemctl daemon-reload
   sudo systemctl restart graviteeio-apim-gateway graviteeio-apim-rest-api
 
-  wait_backends_ready
+  wait_apim_backends_ready
 
   echo "configure frontend"
   local public_ip
   if public_ip="$(get_current_public_ip)"
   then
     echo "Public IP detected: ${public_ip}"
-    configure_frontend "${public_ip}"
+    configure_apim_frontend "${public_ip}"
   else
     echo "Public IP not found, configure with localhost"
-    configure_frontend "localhost"
+    configure_apim_frontend "localhost"
   fi
 
   open_apim_ports
 
   sudo systemctl restart nginx
-  echo "Graviteeio installation Done."
+  echo "Graviteeio API-Management installation Done."
+}
+
+install_graviteeio_am_from_repository(){
+  local specific_version="${1}"
+  if [[ -n "${specific_version}" ]]; then specific_version="-${specific_version}-0"; fi
+
+  install_graviteeio_repository
+
+  sudo yum install -y "graviteeio-am-4x${specific_version}"
+  echo "Installation of RPMs done."
+
+  sudo systemctl daemon-reload
+
+  echo "configure frontend"
+  local public_ip
+  if public_ip="$(get_current_public_ip)"
+  then
+    echo "Public IP detected: ${public_ip}"
+    configure_am_frontend "${public_ip}"
+  fi
+
+  sudo systemctl start graviteeio-am-gateway graviteeio-am-management-api
+  sleep 30
+  open_am_ports
+  sudo systemctl restart nginx
+
+  echo "Graviteeio Access-Management installation Done."
 }
 
 setup_license(){
@@ -259,12 +310,25 @@ setup_license(){
   sudo cp ~/license.key /opt/graviteeio/
   sudo chown gravitee: /opt/graviteeio/license.key
 
-  for component in "gateway" "rest-api"
-  do
-    sudo mkdir -p "/opt/graviteeio/apim/graviteeio-apim-${component}/license"
-    sudo ln -s /opt/graviteeio/license.key "/opt/graviteeio/apim/graviteeio-apim-${component}/license/license.key"
-    sudo chown -R gravitee: "/opt/graviteeio/apim/graviteeio-apim-${component}/license"
-  done
+  if [[ -d "/opt/graviteeio/apim" ]]
+  then
+    for component in "gateway" "rest-api"
+    do
+      sudo mkdir -p "/opt/graviteeio/apim/graviteeio-apim-${component}/license"
+      sudo ln -s /opt/graviteeio/license.key "/opt/graviteeio/apim/graviteeio-apim-${component}/license/license.key"
+      sudo chown -R gravitee: "/opt/graviteeio/apim/graviteeio-apim-${component}/license"
+    done
+  fi
+
+  if [[ -d "/opt/graviteeio/am" ]]
+  then
+    for component in "gateway" "management-api"
+    do
+      sudo mkdir -p "/opt/graviteeio/am/graviteeio-am-${component}/license"
+      sudo ln -s /opt/graviteeio/license.key "/opt/graviteeio/am/graviteeio-am-${component}/license/license.key"
+      sudo chown -R gravitee: "/opt/graviteeio/am/graviteeio-am-${component}/license"
+    done
+  fi
 }
 
 install_prerequities(){
@@ -275,11 +339,11 @@ install_prerequities(){
     install_elasticsearch
 }
 
-wait_backends_ready(){
+wait_apim_backends_ready(){
   local max_iter="${1:-40}"
   local expected_version="${2:-}"
 
-  while ! test_graviteeio_backends "${expected_version}"
+  while ! test_graviteeio_apim_apim_backends "${expected_version}"
   do
     echo "Waiting 3 sec more to let backend startup... ${max_iter}"
     sleep 3
@@ -290,7 +354,7 @@ wait_backends_ready(){
     fi
   done
 
-  if test_graviteeio_backends "${expected_version}"
+  if test_graviteeio_apim_apim_backends "${expected_version}"
   then
     echo "Management API and Gateway are ready !"
   else
@@ -299,12 +363,12 @@ wait_backends_ready(){
   fi
 }
 
-test_graviteeio_backends(){
+test_graviteeio_apim_apim_backends(){
   local expected_version="${1:-}"
   if [[ -z "${expected_version}" ]]
   then
     expected_version="$(ls -1 /opt/graviteeio/apim/graviteeio-apim-rest-api*/lib/gravitee-apim-rest-api-*.jar | sed 's/^.*\/gravitee-apim-rest-api-.*-\([0-9.]*\)\.jar/\1/' | sort -u | tail -n 1)"
-    echo "test_graviteeio on computed expected_version: ${expected_version}"
+    echo "test_graviteeio_apim on computed expected_version: ${expected_version}"
   fi
 
   echo "Test from gravitee logs"
@@ -327,9 +391,9 @@ test_graviteeio_backends(){
   fi
 }
 
-test_graviteeio(){
+test_graviteeio_apim(){
   local expected_version="${1:-}"
-  if ! test_graviteeio_backends "${expected_version}"
+  if ! test_graviteeio_apim_apim_backends "${expected_version}"
   then
     return 1
   fi
@@ -351,7 +415,7 @@ test_graviteeio(){
   echo ""
 }
 
-test_graviteeio_upgrade(){
+test_graviteeio_apim_upgrade(){
   local first_version second_version
   first_version="${1:-4.4.9}"
   second_version="${2:-4.5.0}"
@@ -359,15 +423,15 @@ test_graviteeio_upgrade(){
   echo "Install APIM from ${first_version}"
   if [[ -d "${first_version}" ]]
   then
-    install_graviteeio_from_local_rpms "${first_version}"
+    install_graviteeio_apim_from_local_rpms "${first_version}"
   else
-    install_graviteeio_from_repository "${first_version}"
+    install_graviteeio_apim_from_repository "${first_version}"
   fi
   sleep 1
-  add_user
+  add_user_in_apim
   sudo systemctl restart graviteeio-apim-rest-api
   sleep 20
-  wait_backends_ready
+  wait_apim_backends_ready
   sleep 3
   echo "Test backend rest-api with gravitee user"
   curl --user 'gravitee:bloubiboulga' "http://localhost:8083/management/organizations/DEFAULT/environments/DEFAULT/"
@@ -376,9 +440,9 @@ test_graviteeio_upgrade(){
   sleep 1
   if [[ -d "${first_version}" ]]
   then
-    test_graviteeio
+    test_graviteeio_apim
   else
-    test_graviteeio "${first_version}"
+    test_graviteeio_apim "${first_version}"
   fi
 
   echo "APIM ${first_version} installed - use it"
@@ -403,9 +467,9 @@ test_graviteeio_upgrade(){
   sleep 1
   if [[ -d "${second_version}" ]]
   then
-    test_graviteeio
+    test_graviteeio_apim
   else
-    test_graviteeio "${second_version}"
+    test_graviteeio_apim "${second_version}"
   fi
 
   echo "APIM ${second_version} installed - use it"
@@ -524,7 +588,7 @@ create_gravitee_echo_api(){
     --data-raw '{}'
 }
 
-add_user(){
+add_user_in_apim(){
   local username bcrypt_password restart
   username="${1:-gravitee}"
   # default password: bloubiboulga
@@ -540,13 +604,13 @@ add_user(){
   if [[ "${restart}" == "true" ]]
   then
     sudo systemctl restart graviteeio-apim-rest-api
-    wait_backends_ready
+    wait_apim_backends_ready
   fi
 
   echo "User ${username} added."
 }
 
-uninstall(){
+uninstall_apim(){
   sudo yum remove -y graviteeio-apim-*
 
   if [[ "${1:-}" == "--hard" && -d /opt/graviteeio ]]
@@ -568,22 +632,22 @@ ${COMMANDS}
 exemple :
 ./install_redhat.sh install_prerequities
 
-./install_redhat.sh install_graviteeio_from_repository
-./install_redhat.sh install_graviteeio_from_repository 4.2.6
+./install_redhat.sh install_graviteeio_apim_from_repository
+./install_redhat.sh install_graviteeio_apim_from_repository 4.2.6
 
-./install_redhat.sh install_graviteeio_from_local_rpms
-./install_redhat.sh install_graviteeio_from_local_rpms /path/to/rpms/folder
+./install_redhat.sh install_graviteeio_apim_from_local_rpms
+./install_redhat.sh install_graviteeio_apim_from_local_rpms /path/to/rpms/folder
 
-./install_redhat.sh test_graviteeio
+./install_redhat.sh test_graviteeio_apim
 
 ./install_redhat.sh create_gravitee_echo_api
 curl -s -H "say: gloubiboulga" "http://localhost:8082/echo" | jq '.'
 
-./install_redhat.sh test_graviteeio_upgrade
-./install_redhat.sh test_graviteeio_upgrade "4.4.9" "4.5.0"
-./install_redhat.sh test_graviteeio_upgrade "4.4.9" "/home/azureadmin/rpms"
+./install_redhat.sh test_graviteeio_apim_upgrade
+./install_redhat.sh test_graviteeio_apim_upgrade "4.4.9" "4.5.0"
+./install_redhat.sh test_graviteeio_apim_upgrade "4.4.9" "/home/azureadmin/rpms"
 
-./install_redhat.sh uninstall
+./install_redhat.sh uninstall_apim
 
 EOF
 }
