@@ -54,6 +54,17 @@ resource "azurerm_network_security_group" "rpm_tf_nsg" {
     source_address_prefix      = var.allowed_ips
     destination_address_prefix = "*"
   }
+  security_rule {
+    name                       = "AM"
+    priority                   = 1102
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "8092-8094"
+    source_address_prefix      = var.allowed_ips
+    destination_address_prefix = "*"
+  }
 }
 
 # Create network interface
