@@ -282,4 +282,4 @@ Plus continue the installation process.
 
 * refactor install_* script to `install.sh` and `manage.sh` dedicated to test
 * use `set -euo pipefail` in sh script
-* test all changes on suze and centos
+* test all changes on centos

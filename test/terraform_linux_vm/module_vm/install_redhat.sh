@@ -101,6 +101,21 @@ install_graviteeio_repository(){
   # https://packagecloud.io/docs#rpm_any
     echo "[graviteeio]
 name=graviteeio
+baseurl=https://packagecloud.io/graviteeio/rpms/el/7/\$basearch
+gpgcheck=1
+repo_gpgcheck=1
+enabled=1
+gpgkey=https://packagecloud.io/graviteeio/rpms/gpgkey,https://packagecloud.io/graviteeio/rpms/gpgkey/graviteeio-rpms-319791EF7A93C060.pub.gpg
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+metadata_expire=300" | sudo tee /etc/yum.repos.d/graviteeio.repo > /dev/null
+    sudo yum --quiet makecache --assumeyes --disablerepo='*' --enablerepo='graviteeio'
+}
+
+install_graviteeio_repository_nightly(){
+  # https://packagecloud.io/docs#rpm_any
+    echo "[graviteeio]
+name=graviteeio
 baseurl=https://packagecloud.io/graviteeio/nightly/el/7/\$basearch
 gpgcheck=1
 repo_gpgcheck=1
@@ -213,7 +228,7 @@ configure_am_frontend(){
 }
 
 install_graviteeio_apim_from_repository(){
-  local specific_version="${1}"
+  local specific_version="${1:-}"
   if [[ -n "${specific_version}" ]]; then specific_version="-${specific_version}-1"; fi
 
   install_graviteeio_repository
@@ -331,7 +346,7 @@ setup_license(){
   fi
 }
 
-install_prerequities(){
+install_prerequisites(){
     install_tools
     install_openjdk 21
     install_nginx
@@ -626,11 +641,11 @@ This script let you install GraviteeIO from local RPM or official published repo
 
 usage : $0 [COMMAND]
 
-COMMAND : (default: install_prerequities)
+COMMAND : (default: install_prerequisites)
 ${COMMANDS}
 
 exemple :
-./install_redhat.sh install_prerequities
+./install_redhat.sh install_prerequisites
 
 ./install_redhat.sh install_graviteeio_apim_from_repository
 ./install_redhat.sh install_graviteeio_apim_from_repository 4.2.6
@@ -654,7 +669,7 @@ EOF
 
 ### Default context ###
 COMMANDS="$(sed -n '/^[a-z].*(){$/ s/(){//p' $0)"
-COMMAND="install_prerequities"
+COMMAND="install_prerequisites"
 
 ### Parse args ###
 if [[ -n "${1:-}" ]]
