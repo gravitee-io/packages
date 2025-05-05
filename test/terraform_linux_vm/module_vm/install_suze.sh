@@ -1,4 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+install_tools(){
+    sudo zypper -n install jq
+}
 
 install_nginx() {
     sudo zypper addrepo -G -t yum -c 'http://nginx.org/packages/sles/15' nginx
@@ -17,6 +22,8 @@ install_mongo() {
     fi
     
     sudo zypper -n install mongodb-org
+    sudo systemctl daemon-reload
+    sudo systemctl enable mongod.service
     sudo systemctl start mongod
 }
 
@@ -34,6 +41,8 @@ type=rpm-md" | sudo tee /etc/zypp/repos.d/elasticsearch.repo > /dev/null
     sudo zypper -n install elasticsearch
     sudo zypper modifyrepo --disable elasticsearch
     sudo sed "0,/xpack.security.enabled:.*/s/xpack.security.enabled:.*/xpack.security.enabled: false/" -i /etc/elasticsearch/elasticsearch.yml
+    sudo systemctl daemon-reload
+    sudo systemctl enable elasticsearch.service
     sudo systemctl start elasticsearch
 }
 
@@ -45,10 +54,11 @@ install_openjdk() {
     sudo zypper refresh
   fi
 
-  sudo zypper -n install java-17-openjdk
+  sudo zypper -n install java-21-openjdk
 }
 
-install_prerequities() {
+install_prerequisites() {
+    install_tools
     install_openjdk
     install_nginx
     install_mongo
@@ -57,21 +67,26 @@ install_prerequities() {
 
 install_graviteeio_repository() {
     echo "[graviteeio]
-    name=graviteeio
-    baseurl=https://packagecloud.io/graviteeio/rpms/el/7/\$basearch
-    gpgcheck=0
-    enabled=1
-    gpgkey=https://packagecloud.io/graviteeio/rpms/gpgkey
-    sslverify=1
-    sslcacert=/etc/pki/tls/certs/ca-bundle.crt
-    metadata_expire=300
-    type=rpm-md" | sudo tee /etc/zypp/repos.d/graviteeio.repo > /dev/null
+name=graviteeio
+baseurl=https://packagecloud.io/graviteeio/rpms/el/7/\$basearch
+gpgcheck=1
+repo_gpgcheck=1
+enabled=1
+gpgkey=https://packagecloud.io/graviteeio/rpms/gpgkey,https://packagecloud.io/graviteeio/rpms/gpgkey/graviteeio-rpms-319791EF7A93C060.pub.gpg
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+metadata_expire=300
+type=rpm-md" | sudo tee /etc/zypp/repos.d/graviteeio.repo > /dev/null
+  sudo zypper --gpg-auto-import-keys refresh graviteeio
 }
 
 install_graviteeio_from_repository() {
+  local specific_version="${1:-}"
+  if [[ -n "${specific_version}" ]]; then specific_version="-${specific_version}-1"; fi
+
   install_graviteeio_repository
 
-  sudo zypper -n install graviteeio-apim-4x
+  sudo zypper -n install "graviteeio-apim-4x${specific_version}"
 
   sudo systemctl daemon-reload
   sudo systemctl start graviteeio-apim-gateway graviteeio-apim-rest-api
@@ -115,11 +130,11 @@ This script let you install GraviteeIO from local RPM or official published repo
 
 usage : $0 [COMMAND]
 
-COMMAND : (default: install_prerequities)
+COMMAND : (default: install_prerequisites)
 ${COMMANDS}
 
 exemple :
-./install_redhat_graviteeio.sh install_prerequities
+./install_redhat_graviteeio.sh install_prerequisites
 
 ./install_redhat_graviteeio.sh install_graviteeio_from_repository
 
@@ -130,13 +145,14 @@ EOF
 
 ### Default context ###
 COMMANDS="$(sed -n '/^[a-z].*(){$/ s/(){//p' $0)"
-COMMAND="install_prerequities"
+COMMAND="install_prerequisites"
 
 ### Parse args ###
 if [[ -n "$1" ]]
 then
   COMMAND="$1"
+  shift
 fi
 
 ### main ###
-${COMMAND}
+${COMMAND} $@
