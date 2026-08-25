@@ -218,6 +218,11 @@ build_full() {
   rm -fr build/skel/
   mkdir -p ${TEMPLATE_DIR}
 
+  # The dependencies below are pinned on the full EVR, not on the version alone. This package
+  # carries no payload of its own, so an under-specified dependency is satisfied by whatever is
+  # already installed — and a hotfix, whose version is the released one and whose release alone
+  # moves, would install nothing at all.
+
   docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
     --rpm-user ${USER} \
     --rpm-group ${USER} \
@@ -231,10 +236,10 @@ build_full() {
     --architecture ${ARCH} \
     --url "${URL}" \
     --description "${DESC}" \
-    --depends "${PKGNAME}-portal-ui-4x = ${VERSION}" \
-    --depends "${PKGNAME}-management-ui-4x = ${VERSION}" \
-    --depends "${PKGNAME}-rest-api-4x = ${VERSION}" \
-    --depends "${PKGNAME}-gateway-4x = ${VERSION}" \
+    --depends "${PKGNAME}-portal-ui-4x = ${VERSION}-${RELEASE}" \
+    --depends "${PKGNAME}-management-ui-4x = ${VERSION}-${RELEASE}" \
+    --depends "${PKGNAME}-rest-api-4x = ${VERSION}-${RELEASE}" \
+    --depends "${PKGNAME}-gateway-4x = ${VERSION}-${RELEASE}" \
     --verbose \
     -n ${PKGNAME}-4x
 }
