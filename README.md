@@ -44,6 +44,14 @@ TAG=[YOUR_VERSION]~[QUALIFIER].[N]-1
 TAG=4.0.0~alpha.2-1
 ```
 
+For a hotfix, the version stays bare and the release grows, which places it above the release it
+fixes and below the next one:
+```shell
+TAG=[YOUR_VERSION]-1.hotfix.[N]
+...
+# example for a 4.12.17-hotfix.1 version
+TAG=4.12.17-1.hotfix.1
+```
 ### Install local RPMs
 
 Inside the container:
