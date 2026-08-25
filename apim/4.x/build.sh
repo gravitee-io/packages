@@ -28,14 +28,32 @@ parse_version() {
   # two versions are equal, so it can rank 4.13.0-alpha.1 against 4.13.0 but never against 4.12.17.
   # The qualifier therefore belongs in VERSION, behind a tilde — the one token that sorts before
   # everything, including the empty string. Needs rpm >= 4.10; el/7 ships 4.11.3.
+  #
+  # A hotfix is the mirror case: it comes after the release it fixes, so its version stays bare and
+  # RELEASE is what grows. Note that 1.hotfix.N and the plain integers are not two independent
+  # spaces: a rebuild published as 4.12.17-2 outranks 4.12.17-1.hotfix.1 and would ship unfixed
+  # content, so a release that already carries a hotfix has to be rebuilt inside the hotfix range.
 
   VERSION=$(echo "$VERSION_WITH_QUALIFIER" | awk -F '-' '{print $1}')              # 4.13.0
-  GRAVITEEIO_QUALIFIER=$(echo "$VERSION_WITH_QUALIFIER" | awk -F '-' '{print $2}') # alpha.1 or empty
+  GRAVITEEIO_QUALIFIER=$(echo "$VERSION_WITH_QUALIFIER" | awk -F '-' '{print $2}') # alpha.1, hotfix.2 or empty
 
   RELEASE="1"
-  if [ -n "$GRAVITEEIO_QUALIFIER" ]; then
-    VERSION="${VERSION}~${GRAVITEEIO_QUALIFIER}"
+  if [ -z "$GRAVITEEIO_QUALIFIER" ]; then
+    return
   fi
+
+  # The qualifier decides which side of the release the package lands on, so it is matched against
+  # a closed vocabulary rather than sorted by a catch-all. Anything a catch-all would have to guess
+  # about — a missing number, a spelling variant — is placed by accident, and -hotfix placed by
+  # accident sorts below the release it fixes.
+  case "$GRAVITEEIO_QUALIFIER" in
+  hotfix.[0-9]*) RELEASE="1.${GRAVITEEIO_QUALIFIER}" ;;
+  alpha.[0-9]* | beta.[0-9]* | rc.[0-9]* | milestone.[0-9]*) VERSION="${VERSION}~${GRAVITEEIO_QUALIFIER}" ;;
+  *)
+    echo "Cannot package '$VERSION_WITH_QUALIFIER': the qualifier must be alpha, beta, rc, milestone or hotfix, followed by a number." >&2
+    exit 1
+    ;;
+  esac
 }
 
 clean() {
