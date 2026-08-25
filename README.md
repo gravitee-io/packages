@@ -33,13 +33,17 @@ TAG=[YOUR_VERSION]-1
 TAG= 4.0.0-1
 ```
 
-For a pre-release (aka alpha version), the TAG of your RPM package should look like:
+For a pre-release (aka alpha version), `build.sh -v` takes the dashed version as always; the
+tilde appears only in the resulting TAG, and it is what sorts the package below the release it
+announces:
 ```shell
-TAG=[YOUR_VERSION]-0.x.alpha
+./build.sh -v [YOUR_VERSION]-[QUALIFIER].[N]
+TAG=[YOUR_VERSION]~[QUALIFIER].[N]-1
 ...
 # example for a 4.0.0-alpha.2 version
-TAG= 4.0.0-0.2.alpha
+TAG=4.0.0~alpha.2-1
 ```
+
 ### Install local RPMs
 
 Inside the container:

@@ -24,26 +24,17 @@ declare TEMPLATE_DIR=""
 parse_version() {
   declare GRAVITEEIO_QUALIFIER=""
 
-  # parse version to determine if it is a pre release or not
-  # More information about the versioning here:
-  #  - https://fedoraproject.org/wiki/Package_Versioning_Examples
-  #  - https://docs.fedoraproject.org/en-US/packaging-guidelines/Versioning/#_prerelease_versions
+  # RPM has no notion of a pre-release, and RELEASE cannot stand in for one: it is only read when
+  # two versions are equal, so it can rank 4.13.0-alpha.1 against 4.13.0 but never against 4.12.17.
+  # The qualifier therefore belongs in VERSION, behind a tilde — the one token that sorts before
+  # everything, including the empty string. Needs rpm >= 4.10; el/7 ships 4.11.3.
 
-  VERSION=$(echo "$VERSION_WITH_QUALIFIER" | awk -F '-' '{print $1}') # 4.0.0
-
+  VERSION=$(echo "$VERSION_WITH_QUALIFIER" | awk -F '-' '{print $1}')              # 4.13.0
   GRAVITEEIO_QUALIFIER=$(echo "$VERSION_WITH_QUALIFIER" | awk -F '-' '{print $2}') # alpha.1 or empty
+
+  RELEASE="1"
   if [ -n "$GRAVITEEIO_QUALIFIER" ]; then
-    declare GRAVITEEIO_QUALIFIER_NAME=""
-    declare GRAVITEEIO_QUALIFIER_VERSION=""
-
-    GRAVITEEIO_QUALIFIER_NAME=$(echo "$GRAVITEEIO_QUALIFIER" | awk -F '.' '{print $1}')    # alpha or empty
-    GRAVITEEIO_QUALIFIER_VERSION=$(echo "$GRAVITEEIO_QUALIFIER" | awk -F '.' '{print $2}') # 1  or empty
-
-    # If there is a qualifier, it means that the version is a pre-release. So according to the documentation, release must be a number < 1 and of the form "0.x"
-    RELEASE="0.$GRAVITEEIO_QUALIFIER_VERSION.$GRAVITEEIO_QUALIFIER_NAME"
-  else
-    # If there is no qualifier, it means that the version is a final release. So according to the documentation, release must be a number >= 1
-    RELEASE="1"
+    VERSION="${VERSION}~${GRAVITEEIO_QUALIFIER}"
   fi
 }
 
@@ -58,8 +49,9 @@ clean() {
 download() {
   local filename="graviteeio-full-${VERSION_WITH_QUALIFIER}.zip"
   local path="graviteeio-apim/distributions/"
-  # If $RELEASE is no equal to 1 then we need to download the bundle from the pre-releases folder
-  if [ "$RELEASE" != "1" ]; then
+  # Any qualified version is uploaded to a folder of its own. RELEASE no longer says which, now
+  # that a pre-release carries its qualifier in the version.
+  if [[ "$VERSION_WITH_QUALIFIER" == *-* ]]; then
     path="pre-releases/graviteeio-apim/distributions/"
   fi
   rm -fr .staging
