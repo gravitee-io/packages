@@ -234,7 +234,8 @@ ships_gamma_ui() {
 
 # Not a dependency of the meta-package: Gamma is disabled by default in the Management API, and a
 # new nginx listener arriving with a routine update could keep nginx, and the Console and Portal
-# it serves, from restarting
+# it serves, from restarting. The two conflicts pin it to the Management API of the same build
+# without requiring it: upgrading the Management API then upgrades Gamma UI with it.
 build_gamma_ui() {
   local gamma_ui_dir=".staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-gamma-ui-${VERSION_WITH_QUALIFIER}"
   if [ ! -d "$gamma_ui_dir" ]; then
@@ -270,6 +271,8 @@ build_gamma_ui() {
     --url "${URL}" \
     --description "${DESC}: Gamma UI" \
     --depends nginx \
+    --conflicts "${PKGNAME}-rest-api-4x < ${VERSION}-${RELEASE}" \
+    --conflicts "${PKGNAME}-rest-api-4x > ${VERSION}-${RELEASE}" \
     --config-files /opt/graviteeio/apim/graviteeio-apim-gamma-ui/constants.json \
     --config-files /etc/nginx/conf.d/graviteeio-apim-gamma-ui.conf \
     --verbose \
