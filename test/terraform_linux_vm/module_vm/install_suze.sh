@@ -94,6 +94,9 @@ install_graviteeio_from_repository() {
   if [ $http_response == "200" ]; then
       sudo sed -i -e "s/localhost/$(cat /tmp/curl_body)/g" /opt/graviteeio/apim/management-ui/constants.json
       sudo sed -i -e "s;/portal;http://$(cat /tmp/curl_body):8083/portal;g" /opt/graviteeio/apim/portal-ui/assets/config.json
+      if [[ -f /opt/graviteeio/apim/gamma-ui/constants.json ]]; then
+        sudo sed -i -e "s/localhost/$(cat /tmp/curl_body)/g" /opt/graviteeio/apim/gamma-ui/constants.json /etc/nginx/conf.d/graviteeio-apim-gamma-ui.conf
+      fi
   fi
   sudo systemctl restart nginx
   echo "Graviteeio installation Done."
@@ -118,6 +121,9 @@ install_graviteeio_from_local_rpms() {
   if [ $http_response == "200" ]; then
       sudo sed -i -e "s/localhost/$(cat /tmp/curl_body)/g" /opt/graviteeio/apim/management-ui/constants.json
       sudo sed -i -e "s;/portal;http://$(cat /tmp/curl_body):8083/portal;g" /opt/graviteeio/apim/portal-ui/assets/config.json
+      if [[ -f /opt/graviteeio/apim/gamma-ui/constants.json ]]; then
+        sudo sed -i -e "s/localhost/$(cat /tmp/curl_body)/g" /opt/graviteeio/apim/gamma-ui/constants.json /etc/nginx/conf.d/graviteeio-apim-gamma-ui.conf
+      fi
   fi
 
   sudo systemctl restart nginx

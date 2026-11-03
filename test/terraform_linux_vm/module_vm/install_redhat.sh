@@ -128,9 +128,9 @@ metadata_expire=300" | sudo tee /etc/yum.repos.d/graviteeio.repo > /dev/null
 }
 
 open_apim_ports(){
-  echo "Use semanage port to open port 8084 (console) and 8085 (portal) on SE Linux."
-  open_ports_semanage 8084 8085
-  open_ports_firewall "8082-8085"
+  echo "Use semanage port to open port 8084 (console), 8085 (portal) and 8086 (gamma) on SE Linux."
+  open_ports_semanage 8084 8085 8086
+  open_ports_firewall "8082-8086"
 }
 
 open_am_ports(){
@@ -205,6 +205,12 @@ configure_apim_frontend(){
   sudo sed -i "/\"baseURL\": /{s#\"baseURL\": \".*\"#\"baseURL\": \"http://${public_ip}:8083/portal\"#}" /opt/graviteeio/apim/portal-ui/assets/config.json
   sudo sed -i "/^#portal:/c\portal:\n  url: \"http://${public_ip}:8085\"" /opt/graviteeio/apim/rest-api/config/gravitee.yml
   sudo sed -i "/Content-Security-Policy/{s/localhost/${public_ip}/}" /etc/nginx/conf.d/graviteeio-apim-portal-ui.conf
+  # Gamma UI is only packaged since 4.12
+  if [[ -f /opt/graviteeio/apim/gamma-ui/constants.json ]]
+  then
+    sudo sed -i "s#http://localhost:8083/gamma#http://${public_ip}:8083/gamma#" /opt/graviteeio/apim/gamma-ui/constants.json
+    sudo sed -i "/Content-Security-Policy/{s#http://localhost:8083/gamma#http://${public_ip}:8083/gamma#g}" /etc/nginx/conf.d/graviteeio-apim-gamma-ui.conf
+  fi
 
   # During RPM installation the management-api is started with default value.
   # This mean that the portal is set in mongo DB with value 'http://localhost:4100'
@@ -428,6 +434,13 @@ test_graviteeio_apim(){
   echo "Test Portal UI"
   curl -s 'http://localhost:8085/' | grep '<app-root></app-root>'
   echo ""
+
+  if [[ -f /opt/graviteeio/apim/gamma-ui/constants.json ]]
+  then
+    echo "Test Gamma UI"
+    curl -s 'http://localhost:8086/' | grep '<title>Gravitee Gamma</title>'
+    echo ""
+  fi
 }
 
 test_graviteeio_apim_upgrade(){

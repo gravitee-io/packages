@@ -148,6 +148,8 @@ tmux attach
 ----
 curl 'http://localhost:8084/' |grep -i gravitee
 curl 'http://localhost:8085/' |grep -i gravitee
+# From 4.12
+curl 'http://localhost:8086/' |grep -i gravitee
 ----
 
 . Notice that current script `install_redhat.sh` have some usefull command like:
