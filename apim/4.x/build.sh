@@ -223,6 +223,59 @@ build_portal_ui() {
     -n ${PKGNAME}-portal-ui-4x
 }
 
+# Gamma UI is in the bundle since 4.12, and this script also builds the older 4.x lines. The
+# version decides, not the folder: a bundle that stops shipping it must fail the build rather than
+# silently publish a release without it.
+ships_gamma_ui() {
+  local minor
+  minor=$(echo "$VERSION_WITH_QUALIFIER" | cut -d. -f2)
+  [ "$minor" -ge 12 ]
+}
+
+# Not a dependency of the meta-package: Gamma is disabled by default in the Management API, and a
+# new nginx listener arriving with a routine update could keep nginx, and the Console and Portal
+# it serves, from restarting
+build_gamma_ui() {
+  local gamma_ui_dir=".staging/graviteeio-full-${VERSION_WITH_QUALIFIER}/graviteeio-gamma-ui-${VERSION_WITH_QUALIFIER}"
+  if [ ! -d "$gamma_ui_dir" ]; then
+    echo "Cannot package Gamma UI: '$gamma_ui_dir' is missing from the bundle." >&2
+    exit 1
+  fi
+
+  rm -fr build/skel/
+
+  mkdir -p ${TEMPLATE_DIR}/opt/graviteeio/apim
+  cp -fr "$gamma_ui_dir" ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-gamma-ui
+  # The bundled constants.json points to a relative /gamma, which only resolves behind a reverse proxy
+  cp build/files/gamma-ui/constants.json ${TEMPLATE_DIR}/opt/graviteeio/apim/graviteeio-apim-gamma-ui/constants.json
+  ln -sfn graviteeio-apim-gamma-ui ${TEMPLATE_DIR}/opt/graviteeio/apim/gamma-ui
+  mkdir -p ${TEMPLATE_DIR}/etc/nginx/conf.d/
+  cp build/files/graviteeio-apim-gamma-ui.conf ${TEMPLATE_DIR}/etc/nginx/conf.d/
+
+  docker run --rm -v "${PWD}:${DOCKER_WDIR}" -w ${DOCKER_WDIR} ${DOCKER_FPM}:rpm -t rpm \
+    --rpm-user ${USER} \
+    --rpm-group ${USER} \
+    --rpm-attr "0755,${USER},${USER}:/opt/graviteeio" \
+    --rpm-attr "0644,root,root:/etc/nginx/conf.d/graviteeio-apim-gamma-ui.conf" \
+    --directories /opt/graviteeio \
+    --before-install build/scripts/gamma-ui/preinst.rpm \
+    --after-install build/scripts/gamma-ui/postinst.rpm \
+    --iteration ${RELEASE} \
+    -C ${TEMPLATE_DIR} \
+    -s dir -v ${VERSION} \
+    --license "${LICENSE}" \
+    --vendor "${VENDOR}" \
+    --maintainer "${MAINTAINER}" \
+    --architecture ${ARCH} \
+    --url "${URL}" \
+    --description "${DESC}: Gamma UI" \
+    --depends nginx \
+    --config-files /opt/graviteeio/apim/graviteeio-apim-gamma-ui/constants.json \
+    --config-files /etc/nginx/conf.d/graviteeio-apim-gamma-ui.conf \
+    --verbose \
+    -n ${PKGNAME}-gamma-ui-4x
+}
+
 build_full() {
   # Dirty hack to avoid issues with FPM
   rm -fr build/skel/
@@ -262,6 +315,9 @@ build() {
   build_rest_api
   build_management_ui
   build_portal_ui
+  if ships_gamma_ui; then
+    build_gamma_ui
+  fi
   build_full
 }
 
