@@ -1,0 +1,10 @@
+#!/bin/sh
+
+echo "Execute graviteeio-apim-gamma-ui postinst script."
+
+if [ "systemd" = "$(ps -p 1 -o comm=)" ]
+then
+  # Reload rather than restart: if nginx cannot apply the new server, on 8086, it keeps serving the
+  # Console and Portal with the configuration it already runs
+  systemctl reload-or-restart nginx
+fi
