@@ -50,7 +50,7 @@ resource "azurerm_network_security_group" "rpm_tf_nsg" {
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "8080-8085"
+    destination_port_range     = "8080-8086"
     source_address_prefix      = var.allowed_ips
     destination_address_prefix = "*"
   }
