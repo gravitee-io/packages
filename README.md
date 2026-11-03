@@ -143,6 +143,53 @@ yum -q makecache -y --disablerepo='*' --enablerepo='graviteeio'
 yum install graviteeio-apim-4x-[TAG].noarch -y
 ```
 
+## Check APIM compatibility with a RHEL version
+
+`test/local/check-rhel.sh` answers "does APIM install and run on RHEL N?" in a few minutes, from a
+laptop. It has been run with Docker Desktop on macOS arm64. It also has a Podman path
+(`--systemd=always`) and should work on a Linux host, but neither has been tried yet. On a Linux
+host, note that the Docker path runs a privileged container with the host cgroup tree: it gets
+root-level access to the laptop itself, not to a VM.
+
+It starts a UBI `init` container (`registry.access.redhat.com/ubiN/ubi-init`, pulled on each run,
+systemd as PID 1) next to a MongoDB container, installs the Java the APIM version needs (21 up to
+4.12, 25 from 4.13), nginx and the APIM RPMs, starts the services, prints a pass/fail summary, then
+removes the containers. The MongoDB URI goes through a systemd drop-in; there is no Elasticsearch,
+so analytics are disabled. RHEL 8 ships no Java 25: APIM 4.13 and later on RHEL 8 fail straight
+away with that message.
+
+```bash
+# A version published on packagecloud (graviteeio/rpms)
+test/local/check-rhel.sh --rhel 9 --version 4.12.21
+
+# A dry-run build published on graviteeio/nightly
+test/local/check-rhel.sh --rhel 10 --version [VERSION] --repo nightly
+
+# RPMs built locally with apim/4.x/build.sh (meta-package included)
+test/local/check-rhel.sh --rhel 10 --rpms apim/4.x
+```
+
+The checks:
+
+- every installed `graviteeio-apim-*` part but the optional Gamma UI is required by the
+  `graviteeio-apim-4x` meta-package, which is what an operator installs;
+- `graviteeio-apim-gateway`, `graviteeio-apim-rest-api` and `nginx` services are `active`;
+- the Gateway answers on 8082 (`No context-path matches`);
+- the Management API answers on 8083;
+- the console (8084) and the portal (8085) are served by nginx;
+- the Gamma UI is served by nginx on the port of its nginx configuration, when its package is
+  installed (skipped otherwise, failed when the port cannot be found), and it is on the version
+  of the Management API.
+
+The exit code is 0 only when every check passes. `--keep` leaves the containers running to debug
+them, `--help` lists the other options.
+
+What it does **not** cover: analytics (Elasticsearch); the RHEL kernel, since a container shares
+the kernel of the host (Docker Desktop's or Podman's Linux VM on macOS); and SELinux, which is not
+enforced in the container. It validates the packages, their dependencies on the RHEL repositories
+and the systemd units, not the OS itself. For the RHEL kernel, SELinux or an upgrade on a real
+system, use a VM (see [test/terraform_linux_vm](test/terraform_linux_vm/readme.adoc)).
+
 ## Manual Integration test
 
 ### Process to test an APIM upgrade
