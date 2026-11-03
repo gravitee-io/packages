@@ -76,6 +76,10 @@ Gamma is disabled by default in the Management API. Install it explicitly:
 yum install graviteeio-apim-gamma-ui-4x-[TAG].noarch
 ```
 
+It conflicts with any other version of `graviteeio-apim-rest-api-4x`, without requiring it, so it
+stays on the version of the Management API: upgrading the Management API upgrades Gamma UI with it.
+Install the `[TAG]` of your Management API, as a newer Gamma UI upgrades the Management API too.
+
 Gamma UI is served by nginx on port `8086`, next to the Console (`8084`) and the Portal (`8085`).
 It calls the Gamma entrypoint of the Management API, `http://localhost:8083/gamma` by default.
 That entrypoint is off until Gamma is enabled in the Management API: set `gamma.enabled: true` in
