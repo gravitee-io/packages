@@ -60,8 +60,53 @@ yum install /local-rpms/graviteeio-apim-gateway-4x-[TAG].noarch.rpm
 yum install /local-rpms/graviteeio-apim-management-ui-4x-[TAG].noarch.rpm
 yum install /local-rpms/graviteeio-apim-portal-ui-4x-[TAG].noarch.rpm
 yum install /local-rpms/graviteeio-apim-rest-api-4x-[TAG].noarch.rpm
+# From 4.12 only, see "Gamma UI" below
+yum install /local-rpms/graviteeio-apim-gamma-ui-4x-[TAG].noarch.rpm
 ```
 
+### Gamma UI
+
+Since APIM 4.12, the full bundle ships Gamma UI, and `apim/4.x/build.sh` builds a
+`graviteeio-apim-gamma-ui-4x` package from it. For 4.11 and older, `build.sh` produces the same
+RPMs as before; from 4.12, a bundle without `graviteeio-gamma-ui-[VERSION]` fails the build.
+
+The package is optional: the `graviteeio-apim-4x` meta-package does not depend on it, as long as
+Gamma is disabled by default in the Management API. Install it explicitly:
+```shell
+yum install graviteeio-apim-gamma-ui-4x-[TAG].noarch
+```
+
+Gamma UI is served by nginx on port `8086`, next to the Console (`8084`) and the Portal (`8085`).
+It calls the Gamma entrypoint of the Management API, `http://localhost:8083/gamma` by default.
+That entrypoint is off until Gamma is enabled in the Management API: set `gamma.enabled: true` in
+`/opt/graviteeio/apim/rest-api/config/gravitee.yml` (or `gravitee_gamma_enabled=true` in its
+environment), then restart `graviteeio-apim-rest-api`.
+
+To use another Management API URL, change it in both files below, then reload nginx
+(`systemctl reload nginx`):
+
+* `/opt/graviteeio/apim/gamma-ui/constants.json`: `gammaBaseURL`, the URL the browser calls;
+* `/etc/nginx/conf.d/graviteeio-apim-gamma-ui.conf`: every `http://localhost:8083/gamma` in the
+  `Content-Security-Policy` header, which the browser enforces on the scripts, styles and fonts
+  Gamma UI loads from the Management API.
+
+Both are declared as configuration files, so an upgrade keeps your changes (when the packaged
+version of a file changed too, it is written next to yours as `.rpmnew`).
+
+Before installing it, check that nginx can listen on `8086`: the port must be free, and on a host
+with SELinux enforcing it must be allowed, as for `8084` and `8085`:
+`semanage port -a -t http_port_t -p tcp 8086`. Otherwise nginx cannot serve Gamma UI, and the
+next nginx restart fails, taking the Console and Portal down with it.
+
+To check both cases locally, build a version with Gamma UI and one without, and compare the
+package lists:
+```shell
+cd apim/4.x
+./build.sh -v 4.12.26 && ls *.rpm
+# 6 RPMs, including graviteeio-apim-gamma-ui-4x-4.12.26-1.noarch.rpm
+./build.sh -v 4.11.32 && ls *.rpm
+# 5 RPMs, no Gamma UI
+```
 
 ### How to install RPMs from PackageCloud?
 
